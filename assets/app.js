@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: Copyright (C) Programma 101 Emulator contributors
+//
+// SPDX-License-Identifier: MPL-2.0
+//
 // Programma 101 emulator UI — every key is a click target sending a small action payload over
 // the WebUI socket; the server always answers with a full "state" broadcast (see python/main.py's
 // docstring for the exact "key" message protocol this file implements).
