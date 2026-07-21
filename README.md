@@ -80,9 +80,13 @@ along the way appears on the tape.
 
 ### Managing cards
 
-The **CARDS** panel lists every saved card — click a title to load it as the active program, or
-click **✕** to delete it. A demo countdown program (see below) is seeded automatically on first
-run.
+The **CARDS** panel lists every saved card — click a title to load it as the active program, click
+**⬇** to download it as a `.txt` file, or click **✕** to delete it. Click **UPLOAD CARD (.txt)** to
+add a card from a `.txt` file on your computer — it's parsed and saved immediately, ready to load.
+Uploaded and downloaded cards use the same plain-text format (a small header of `title:`/
+`capacity:`/`labels:` lines, a `---` separator, then one instruction per line), so a card downloaded
+from one device round-trips exactly when re-uploaded elsewhere. A demo countdown program (see
+below) is seeded automatically on first run.
 
 ### Tape and entry controls
 
@@ -132,3 +136,13 @@ A at `-1` and M at `1`, exactly as shown in the screenshot above.
 - **Sound.** `sketch/` runs on the paired MCU and drives a physical Modulino Buzzer via a single
   `play_tone(freq, ms)` Bridge RPC; `python/hw.py` calls it for keyboard clicks, errors, and
   printer chatter, degrading to silent UI-only operation if no buzzer/MCU is attached.
+
+## License
+
+This project is licensed under the [Mozilla Public License 2.0](LICENSE). All original source
+(`python/`, `sketch/`, `assets/index.html`, `assets/app.js`, `assets/style.css`) is a clean-room
+implementation written from the Programma 101's public documentation, carries an MPL-2.0 SPDX
+header, and is licensed under MPL-2.0. The one vendored third-party file, `assets/socket.io.min.js`
+(Socket.IO, © Guillermo Rauch), is separately licensed under the MIT License and retains its own
+license notice, which is permissive and compatible with MPL-2.0.
+

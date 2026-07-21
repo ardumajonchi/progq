@@ -1,3 +1,8 @@
+/* SPDX-FileCopyrightText: Copyright (C) Programma 101 Emulator contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 /* Programma 101 emulator — skeuomorphic control-panel skin modeled on EMU101's screenshots:
    cream case, dark teal/slate keys, white circular numeric keycaps, monospace tape strip. */
 
@@ -364,4 +369,27 @@ html, body {
   cursor: pointer;
   font-weight: bold;
   padding: 2px 6px;
+}
+
+.card-dl {
+  color: #3a5a3a;
+  cursor: pointer;
+  font-weight: bold;
+  padding: 2px 6px;
+  text-decoration: none;
+}
+
+.card-dl:hover {
+  color: #4a6f4a;
+}
+
+#upload-row {
+  margin-top: 8px;
+}
+
+#upload-label {
+  display: block;
+  text-align: center;
+  font-size: 11px;
+  padding: 8px 12px;
 }
