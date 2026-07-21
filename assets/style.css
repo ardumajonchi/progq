@@ -365,3 +365,26 @@ html, body {
   font-weight: bold;
   padding: 2px 6px;
 }
+
+.card-dl {
+  color: #3a5a3a;
+  cursor: pointer;
+  font-weight: bold;
+  padding: 2px 6px;
+  text-decoration: none;
+}
+
+.card-dl:hover {
+  color: #4a6f4a;
+}
+
+#upload-row {
+  margin-top: 8px;
+}
+
+#upload-label {
+  display: block;
+  text-align: center;
+  font-size: 11px;
+  padding: 8px 12px;
+}

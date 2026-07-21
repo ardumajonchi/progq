@@ -80,9 +80,13 @@ along the way appears on the tape.
 
 ### Managing cards
 
-The **CARDS** panel lists every saved card — click a title to load it as the active program, or
-click **✕** to delete it. A demo countdown program (see below) is seeded automatically on first
-run.
+The **CARDS** panel lists every saved card — click a title to load it as the active program, click
+**⬇** to download it as a `.txt` file, or click **✕** to delete it. Click **UPLOAD CARD (.txt)** to
+add a card from a `.txt` file on your computer — it's parsed and saved immediately, ready to load.
+Uploaded and downloaded cards use the same plain-text format (a small header of `title:`/
+`capacity:`/`labels:` lines, a `---` separator, then one instruction per line), so a card downloaded
+from one device round-trips exactly when re-uploaded elsewhere. A demo countdown program (see
+below) is seeded automatically on first run.
 
 ### Tape and entry controls
 

@@ -60,6 +60,12 @@ function renderCards(state) {
     span.className = "card-title";
     span.textContent = title;
     span.addEventListener("click", () => sendKey({ load_card: { title } }));
+    const dl = document.createElement("a");
+    dl.className = "card-dl";
+    dl.textContent = "⬇";
+    dl.title = "Download as .txt";
+    dl.href = `/api/export_card?title=${encodeURIComponent(title)}`;
+    dl.addEventListener("click", (evt) => evt.stopPropagation());
     const del = document.createElement("button");
     del.className = "card-del";
     del.textContent = "✕";
@@ -68,6 +74,7 @@ function renderCards(state) {
       sendKey({ delete_card: { title } });
     });
     li.appendChild(span);
+    li.appendChild(dl);
     li.appendChild(del);
     list.appendChild(li);
   }
@@ -183,6 +190,17 @@ function setupCommit() {
   });
 }
 
+function setupUpload() {
+  const input = document.getElementById("card-upload");
+  input.addEventListener("change", async () => {
+    const file = input.files[0];
+    if (!file) return;
+    const text = await file.text();
+    sendKey({ upload_card: { text } });
+    input.value = "";
+  });
+}
+
 function main() {
   setupKeypad();
   setupOps();
@@ -192,6 +210,7 @@ function main() {
   setupModeBar();
   setupLabels();
   setupCommit();
+  setupUpload();
 
   socket = io();
   socket.on("state", onState);

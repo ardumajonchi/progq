@@ -18,12 +18,17 @@ WebUI message protocol (event "key"):
   {"commit_program": {"title": "..."}}  -- save the recorded buffer as a card and load it
   {"load_card": {"title": "..."}}       -- load a previously saved (or demo) card as the program
   {"delete_card": {"title": "..."}}     -- delete a saved card
+  {"upload_card": {"text": "..."}}      -- parse a card from uploaded .txt content and save it
   {"clear_tape": true}                  -- clear the printer tape
+A saved card can be downloaded as a .txt file via GET /api/export_card?title=... (see
+ProgramCard.to_text/from_text for the plain-text card format this round-trips through).
 While `record_mode` is on, "operator"/"digit" keys append to the in-progress program instead of
 executing immediately (interactive/calculator mode resumes once recording stops).
 """
 
 from __future__ import annotations
+
+from fastapi.responses import Response
 
 from arduino.app_bricks.web_ui import WebUI
 from arduino.app_utils import App
@@ -141,6 +146,15 @@ def main():
         machine.load_program(card.instructions, card.labels)
         buzz("click")
 
+    def _handle_upload_card(text: str) -> None:
+        try:
+            card = ProgramCard.from_text(text)
+        except (CardError, ValueError):
+            buzz("error")
+            return
+        card_store.save(card)
+        buzz("click")
+
     def _on_key(sid, data):
         data = data or {}
         if "digit" in data:
@@ -172,6 +186,8 @@ def main():
             _handle_load_card(data["load_card"]["title"])
         elif "delete_card" in data:
             card_store.delete(data["delete_card"]["title"])
+        elif "upload_card" in data:
+            _handle_upload_card(data["upload_card"]["text"])
         elif data.get("clear_tape"):
             tape.clear()
 
@@ -185,6 +201,18 @@ def main():
 
     ui.expose_api("GET", "/api/state", lambda: public_state(machine, tape, record, card_store.list_titles()))
     ui.expose_api("GET", "/api/tape", lambda: {"text": tape.as_text()})
+
+    def _export_card(title: str):
+        card = card_store.load(title)
+        if card is None:
+            return Response(status_code=404)
+        return Response(
+            content=card.to_text(),
+            media_type="text/plain",
+            headers={"Content-Disposition": f'attachment; filename="{title}.txt"'},
+        )
+
+    ui.expose_api("GET", "/api/export_card", _export_card)
 
     App.run()
 
