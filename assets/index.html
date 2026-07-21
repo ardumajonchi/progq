@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PROGRAMMA 101</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <div id="panel">
+      <div id="tape-wrap">
+        <div id="tape"></div>
+      </div>
+
+      <div id="readout-row">
+        <div class="readout-box"><span class="readout-label">ENTRY</span><span id="entry-display">0</span></div>
+        <div class="readout-box"><span class="readout-label">A</span><span id="a-display">0</span></div>
+        <div class="readout-box"><span class="readout-label">M</span><span id="m-display">0</span></div>
+        <div class="readout-box"><span class="readout-label">R</span><span id="r-display">0</span></div>
+        <div class="readout-box" id="error-box"><span id="error-display"></span></div>
+      </div>
+
+      <div id="controls-row">
+        <div id="reg-keys">
+          <button class="key reg-key" data-reg="F">F</button>
+          <button class="key reg-key" data-reg="E">E</button>
+          <button class="key reg-key" data-reg="D">D</button>
+          <button class="key reg-key" data-reg="C">C</button>
+          <div class="reg-row-bottom">
+            <button class="key reg-key" data-reg="M">M</button>
+            <button class="key" id="split-btn">SPLIT</button>
+            <button class="key reg-key" data-reg="B">B</button>
+          </div>
+        </div>
+
+        <div id="keypad">
+          <button class="key numkey" data-digit="7">7</button>
+          <button class="key numkey" data-digit="8">8</button>
+          <button class="key numkey" data-digit="9">9</button>
+          <button class="key numkey" data-digit="4">4</button>
+          <button class="key numkey" data-digit="5">5</button>
+          <button class="key numkey" data-digit="6">6</button>
+          <button class="key numkey" data-digit="1">1</button>
+          <button class="key numkey" data-digit="2">2</button>
+          <button class="key numkey" data-digit="3">3</button>
+          <button class="key numkey" data-digit="0">0</button>
+          <button class="key numkey" data-digit=".">.</button>
+          <button class="key" id="s-key">S</button>
+        </div>
+
+        <div id="ops-grid">
+          <button class="key opkey" data-op="transfer_to_m" title="Transfer to M">A&darr;</button>
+          <button class="key opkey" data-op="exchange_a" title="Exchange with A">&Acirc;</button>
+          <button class="key opkey" data-op="sqrt" title="Square root">&radic;</button>
+          <button class="key opkey" data-op="sub" title="Subtract">&minus;</button>
+          <button class="key opkey" data-op="mul" title="Multiply">&times;</button>
+          <button class="key opkey" data-op="div" title="Divide">&divide;</button>
+          <button class="key opkey" data-op="print" title="Print">&#9671;</button>
+          <button class="key opkey" data-op="add" title="Add">+</button>
+          <button class="key opkey" data-op="clear" title="Clear">&#10035;</button>
+        </div>
+      </div>
+
+      <div id="mode-bar">
+        <button class="key mode-key" id="rec-btn">&#9679; REC</button>
+        <button class="key mode-key" id="clr-ent-btn">CLR ENT</button>
+        <button class="key mode-key" id="clr-tape-btn">CLR TAPE</button>
+        <button class="key mode-key" id="share-tape-btn">SHARE TAPE</button>
+        <div id="step-counter">STEP <span id="step-num">0</span></div>
+      </div>
+
+      <div id="start-keys">
+        <button class="key start-key" data-start="V">V</button>
+        <button class="key start-key" data-start="W">W</button>
+        <button class="key start-key" data-start="Y">Y</button>
+        <button class="key start-key" data-start="Z">Z</button>
+      </div>
+    </div>
+
+    <aside id="side-panel">
+      <section class="panel-block" id="record-panel">
+        <h3>PROGRAM RECORDING</h3>
+        <div id="record-status">not recording</div>
+        <div id="label-marks">
+          <button class="key label-key" data-label="1">V=1</button>
+          <button class="key label-key" data-label="2">W=2</button>
+          <button class="key label-key" data-label="3">Y=3</button>
+          <button class="key label-key" data-label="4">Z=4</button>
+        </div>
+        <div id="commit-row">
+          <input id="commit-title" type="text" placeholder="Card title...">
+          <button class="key" id="commit-btn">SAVE AS CARD</button>
+        </div>
+      </section>
+
+      <section class="panel-block" id="cards-panel">
+        <h3>CARDS</h3>
+        <ul id="card-list"></ul>
+      </section>
+    </aside>
+  </div>
+
+  <script src="socket.io.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

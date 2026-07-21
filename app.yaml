@@ -1,0 +1,8 @@
+name: "Programma 101"
+description: "A faithful web-based emulator for the Olivetti Programma 101, the 1965 programmable desktop calculator"
+icon: "🧮"
+ports:
+  - 7000
+bricks:
+  - arduino:web_ui: {}
+  - arduino:dbstorage_sqlstore: {}

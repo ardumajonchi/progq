@@ -1,0 +1,98 @@
+# SPDX-FileCopyrightText: Copyright (C) Programma 101 Emulator contributors
+#
+# SPDX-License-Identifier: MPL-2.0
+"""Program cards: the real P101 stored programs on a magnetic card with two independently
+addressable program stripes, each holding up to 120 one-byte BCD-encoded instructions (partial/
+print-mode programs used a 48-instruction capacity loaded at an offset). This module models a card
+as plain data (title + instruction list + label table) suitable for JSON encoding into the
+dbstorage_sqlstore Brick -- a clean-room definition against the documented card capacity, not a
+port of any existing emulator's on-disk format.
+"""
+
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass, field
+
+from .instructions import MAX_LABEL, Instruction
+
+FULL_CAPACITY = 120
+PARTIAL_CAPACITY = 48
+
+
+class CardError(Exception):
+    """Raised when a card exceeds its instruction capacity or has a malformed label table."""
+
+
+@dataclass
+class ProgramCard:
+    """A named, saved program: its instructions plus the label -> program-index table used by
+    jump/cond-jump instructions and the four start keys."""
+
+    title: str
+    instructions: list[Instruction] = field(default_factory=list)
+    labels: dict[int, int] = field(default_factory=dict)
+    capacity: int = FULL_CAPACITY
+
+    def __post_init__(self) -> None:
+        if self.capacity not in (FULL_CAPACITY, PARTIAL_CAPACITY):
+            raise CardError(f"invalid card capacity {self.capacity}")
+        self._check_capacity()
+        for label in self.labels:
+            if not (1 <= label <= MAX_LABEL):
+                raise CardError(f"label {label} out of range 1..{MAX_LABEL}")
+
+    def _check_capacity(self) -> None:
+        if len(self.instructions) > self.capacity:
+            raise CardError(
+                f"program has {len(self.instructions)} instructions, card holds {self.capacity}"
+            )
+
+    def append(self, instr: Instruction) -> None:
+        if len(self.instructions) >= self.capacity:
+            raise CardError(f"card is full at {self.capacity} instructions")
+        self.instructions.append(instr)
+
+    def to_record(self) -> dict:
+        """Plain-data form suitable for SQLStore/JSON persistence."""
+        return {
+            "title": self.title,
+            "capacity": self.capacity,
+            "labels": json.dumps({str(k): v for k, v in self.labels.items()}),
+            "instructions": json.dumps(
+                [
+                    {"operator": i.operator, "register": i.register, "operand": i.operand}
+                    for i in self.instructions
+                ]
+            ),
+        }
+
+    @classmethod
+    def from_record(cls, record: dict) -> "ProgramCard":
+        instructions = [
+            Instruction(operator=item["operator"], register=item["register"], operand=item["operand"])
+            for item in json.loads(record["instructions"])
+        ]
+        labels = {int(k): v for k, v in json.loads(record["labels"]).items()}
+        return cls(
+            title=record["title"],
+            instructions=instructions,
+            labels=labels,
+            capacity=record["capacity"],
+        )
+
+
+def demo_countdown_card() -> ProgramCard:
+    """The bundled demo, matching EMU101's own: "Press V, 10, S" -- a simple countdown-by-one
+    loop from an operator-entered starting value down to zero, printing each step."""
+    from .instructions import OP_COND_JUMP, OP_JUMP, OP_PRINT, OP_STOP, OP_SUB
+
+    instructions = [
+        Instruction(operator=OP_PRINT, register="A"),
+        Instruction(operator=OP_SUB, register="M"),
+        Instruction(operator=OP_COND_JUMP, operand=2),
+        Instruction(operator=OP_JUMP, operand=1),
+        Instruction(operator=OP_STOP),
+    ]
+    labels = {1: 0, 2: 4}
+    return ProgramCard(title="Countdown demo", instructions=instructions, labels=labels)

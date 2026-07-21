@@ -1,0 +1,367 @@
+/* Programma 101 emulator — skeuomorphic control-panel skin modeled on EMU101's screenshots:
+   cream case, dark teal/slate keys, white circular numeric keycaps, monospace tape strip. */
+
+:root {
+  --case: #ece6d8;
+  --case-shadow: #cfc6b0;
+  --tape-bg: #f4f1e8;
+  --ink: #2a2620;
+  --key-dark: #33474a;
+  --key-dark-hi: #466266;
+  --key-white: #fbfaf5;
+  --key-accent: #b5432e;
+  --key-accent-hi: #d4573d;
+  --readout: #1c231f;
+  --readout-text: #7de08a;
+  --error: #c0392b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #14120f;
+  color: var(--ink);
+  font-family: "Courier New", Courier, monospace;
+}
+
+#app {
+  display: flex;
+  min-height: 100vh;
+  padding: 16px;
+  gap: 12px;
+  background: #14120f;
+}
+
+#panel {
+  flex: 1;
+  background: var(--case);
+  border-radius: 10px;
+  box-shadow: 0 8px 0 var(--case-shadow), 0 12px 20px rgba(0, 0, 0, 0.5);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* -- tape ------------------------------------------------------------------------------- */
+
+#tape-wrap {
+  background: #0e0e0c;
+  border-radius: 4px;
+  padding: 6px;
+  height: 120px;
+}
+
+#tape {
+  height: 100%;
+  overflow-y: auto;
+  background: var(--tape-bg);
+  color: #1a1a1a;
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 8px 10px;
+  white-space: pre;
+}
+
+#tape .tape-line:last-child {
+  font-weight: bold;
+}
+
+/* -- register readouts -------------------------------------------------------------------- */
+
+#readout-row {
+  display: flex;
+  gap: 8px;
+}
+
+.readout-box {
+  flex: 1;
+  background: var(--readout);
+  border-radius: 4px;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.readout-label {
+  font-size: 10px;
+  color: #8fae8f;
+  letter-spacing: 1px;
+}
+
+.readout-box span:not(.readout-label) {
+  font-size: 18px;
+  color: var(--readout-text);
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#error-box {
+  flex: 1.4;
+}
+
+#error-display {
+  color: var(--error);
+  font-size: 14px;
+}
+
+/* -- key clusters ----------------------------------------------------------------------- */
+
+#controls-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.key {
+  font-family: inherit;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--key-white);
+  background: var(--key-dark);
+  box-shadow: 0 3px 0 #1c2a2c;
+  transition: transform 0.05s;
+}
+
+.key:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #1c2a2c;
+}
+
+.key:hover {
+  background: var(--key-dark-hi);
+}
+
+#reg-keys {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reg-key {
+  width: 56px;
+  height: 44px;
+  font-size: 16px;
+}
+
+.reg-row-bottom {
+  display: flex;
+  gap: 6px;
+}
+
+.reg-row-bottom .reg-key {
+  width: 40px;
+}
+
+.reg-key.active {
+  background: var(--key-accent);
+  box-shadow: 0 3px 0 #7a2c1e;
+}
+
+#split-btn {
+  width: 60px;
+  height: 44px;
+  font-size: 10px;
+  background: #6a5a3a;
+}
+
+#split-btn:hover {
+  background: #82703f;
+}
+
+#keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 56px);
+  grid-template-rows: repeat(4, 44px);
+  gap: 6px;
+}
+
+.numkey {
+  border-radius: 50%;
+  background: var(--key-white);
+  color: var(--ink);
+  font-size: 18px;
+  box-shadow: 0 3px 0 #b8b2a0;
+}
+
+.numkey:hover {
+  background: #ffffff;
+}
+
+#s-key {
+  grid-column: span 3;
+  background: var(--key-accent);
+  box-shadow: 0 3px 0 #7a2c1e;
+  font-size: 18px;
+  height: 44px;
+}
+
+#s-key:hover {
+  background: var(--key-accent-hi);
+}
+
+#ops-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 48px);
+  grid-template-rows: repeat(3, 44px);
+  gap: 6px;
+}
+
+.opkey {
+  width: 48px;
+  height: 44px;
+  font-size: 16px;
+}
+
+/* -- mode bar / start keys ---------------------------------------------------------------- */
+
+#mode-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mode-key {
+  padding: 8px 12px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.mode-key.active {
+  background: var(--key-accent);
+}
+
+#step-counter {
+  margin-left: auto;
+  background: var(--readout);
+  color: var(--readout-text);
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+#start-keys {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.start-key {
+  width: 56px;
+  height: 40px;
+  font-size: 16px;
+  background: #3a5a3a;
+  box-shadow: 0 3px 0 #1e321e;
+}
+
+.start-key:hover {
+  background: #4a6f4a;
+}
+
+/* -- side panel: recording + card management ----------------------------------------------- */
+
+#side-panel {
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.panel-block {
+  background: var(--case);
+  border-radius: 8px;
+  box-shadow: 0 4px 0 var(--case-shadow);
+  padding: 10px;
+}
+
+.panel-block h3 {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #5a5040;
+}
+
+#record-status {
+  font-size: 12px;
+  margin-bottom: 8px;
+  color: #5a5040;
+}
+
+#record-status.active {
+  color: var(--key-accent);
+  font-weight: bold;
+}
+
+#label-marks {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.label-key {
+  flex: 1;
+  height: 30px;
+  font-size: 10px;
+}
+
+#commit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#commit-title {
+  font-family: inherit;
+  padding: 6px;
+  border: 1px solid var(--case-shadow);
+  border-radius: 4px;
+  background: var(--tape-bg);
+}
+
+#card-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+#card-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 4px;
+  border-bottom: 1px dashed var(--case-shadow);
+}
+
+#card-list li.loaded {
+  color: var(--key-accent);
+  font-weight: bold;
+}
+
+.card-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.card-del {
+  background: none;
+  border: none;
+  color: #a04040;
+  cursor: pointer;
+  font-weight: bold;
+  padding: 2px 6px;
+}
