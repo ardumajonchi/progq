@@ -64,6 +64,7 @@ def main():
     try:
         hw = Hardware()
         hw.play_startup()
+        hw.show_idle()
     except Exception as exc:
         print(f"[progq] Hardware init failed, running without MCU/Bridge: {exc!r}")
         hw = None
@@ -108,11 +109,16 @@ def main():
     def _handle_start_key(start_key: str) -> None:
         if start_key not in START_KEYS:
             return
+        if hw is not None:
+            hw.show_calculating()
         try:
             printed = machine.run_from(start_key)
         except CpuError:
             buzz("error")
             return
+        finally:
+            if hw is not None:
+                hw.show_idle()
         for value in printed:
             tape.print_value(value)
         if printed:
