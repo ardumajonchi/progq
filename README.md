@@ -1,4 +1,4 @@
-# Programma 101
+# Programma Q - A Programma 101 Emulator
 
 A web-based emulator of the Olivetti Programma 101, the 1965 programmable desktop
 calculator/proto-PC. Built on the official `arduino:web_ui` and `arduino:dbstorage_sqlstore`
