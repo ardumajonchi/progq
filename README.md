@@ -81,8 +81,14 @@ along the way appears on the tape.
 ### Managing cards
 
 The **CARDS** panel lists every saved card — click a title to load it as the active program, or
-click **✕** to delete it. A demo countdown program (see below) is seeded automatically on first
-run.
+click **✕** to delete it. A demo countdown program and four worked examples (see below) are seeded
+automatically on first run.
+
+### How to use panel
+
+Below the CARDS panel, the **HOW TO USE** box gives a quick on-screen refresher of the calculator
+flow (type-then-operate, register selection, print/clear/stop, loading and running a card,
+recording a new one) for anyone using the panel without this README open.
 
 ### Tape and entry controls
 
@@ -103,12 +109,27 @@ itself ships. It implements a simple count-down-by-one loop:
 | 3 | jump to label `V` | Otherwise loop back to step 0 |
 | 4 (label `Z`) | stop | Halt |
 
-To run it from a clean start: select **M**, type `1`, press **A↓** (transfer to M) — this sets the
-decrement step size to 1 — then select **A**, type your starting number (e.g. `10`), press `+` to
-commit it into A, load the "Countdown demo" card from the CARDS panel if it isn't already loaded,
-and press **V**. The tape prints each value counting down from your starting number to `0`, then
-one more decrement pushes A negative, the conditional jump fires, and the program stops — leaving
-A at `-1` and M at `1`, exactly as shown in the screenshot above.
+To run it from a clean start: type `1`, press `+` (A = 1), press `Â` with **M** selected (M = 1,
+A = 0), type your starting number (e.g. `10`), press `+` (A = 10), load the "Countdown demo" card
+from the CARDS panel if it isn't already loaded, and press **V**. The tape prints each value
+counting down from your starting number to `0`, then one more decrement pushes A negative, the
+conditional jump fires, and the program stops — leaving A at `-1` and M at `1`, exactly as shown
+in the screenshot above.
+
+## Bundled example cards
+
+Four worked examples are seeded alongside the countdown demo on first run, each with a full
+key-by-key setup writeup in `docs/cards/`:
+
+| Card | File | What it prints |
+|---|---|---|
+| Fibonacci sequence | `docs/cards/fibonacci_sequence.txt` | The first 10 Fibonacci terms: `1 1 2 3 5 8 13 21 34 55` |
+| Compound interest | `docs/cards/compound_interest.txt` | A balance compounding yearly, e.g. $1000 at 5% for 5 years |
+| Pythagorean theorem | `docs/cards/pythagorean_theorem.txt` | The hypotenuse `sqrt(a² + b²)` of a right triangle |
+| Moon landing descent velocity | `docs/cards/moon_landing_descent_velocity.txt` | Lunar free-fall impact velocity `sqrt(2·g·h)`, g = 1.62 m/s² — the class of descent-trajectory arithmetic that made the Programma 101 famous when NASA engineers reportedly used one to help cross-check Apollo 11's lunar module descent |
+
+Each `.txt` file gives the exact key sequence to set up its registers before pressing a start key,
+the expected tape output, and a short explanation of how the program works.
 
 ## How it works
 

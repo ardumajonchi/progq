@@ -1,0 +1,24 @@
+Programma 101 emulator -- example program card
+Title: Pythagorean theorem
+
+WHAT IT DOES
+Prints the hypotenuse c = sqrt(a^2 + b^2) of a right triangle given its two legs a and b.
+Example: a = 3, b = 4 prints 5.
+
+SETUP (key presses before pressing V)
+  1. Type side b, then press +          (A = b, no register selected)
+  2. Press B, then Ahat                  (select B, exchange with A: B = b, A = 0)
+  3. Type side a, then press +            (A = a)
+  4. Press V to run
+
+Notes: "Ahat" is the A-hat key (exchange with A). Always press an operation key right after
+selecting a register and before typing a fresh number.
+
+EXAMPLE
+  Side b = 4, side a = 3 -> tape prints: 5
+
+HOW IT WORKS
+The program squares A (side a, self-multiply), stashes a^2 in C, brings b in from B, squares
+it, adds the stashed a^2 back in, then takes the square root of the sum -- the textbook
+Pythagorean identity, using C purely as scratch space since A is both the running accumulator
+and the only register every arithmetic key can target.

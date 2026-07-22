@@ -1,0 +1,38 @@
+Programma 101 emulator -- example program card
+Title: Fibonacci sequence
+
+WHAT IT DOES
+Prints the first 10 terms of the Fibonacci sequence (1, 1, 2, 3, 5, 8, 13, 21, 34, 55) by
+repeatedly adding the previous two terms.
+
+SETUP (key presses before pressing V)
+  1. Press B, then *              (select B, clear it: B = 0, the term before the first)
+  2. Press 9, then +               (A = 9, the term counter, no register selected)
+  3. Press F, then Ahat             (select F, exchange with A: F = 9, A = 0)
+  4. Press 1, then +                 (A = 1, the first Fibonacci term)
+  5. Press V to run
+
+Notes: "Ahat" is the A-hat key (exchange with A), shown as the circumflex-A symbol on the
+panel. "*" is the clear key. Selecting a register (F, B, ...) highlights it and it stays
+selected through any digit key you press next -- pressing an operation key (+, Ahat, *, ...)
+both applies that register AND deselects it, so always press an operation key right after
+selecting a register and before typing a fresh number.
+
+EXPECTED TAPE OUTPUT
+  1
+  1
+  2
+  3
+  5
+  8
+  13
+  21
+  34
+  55
+
+HOW IT WORKS
+Every arithmetic key always operates on register A, so the program keeps the current term in
+A and the previous term in B, using C and D as scratch space to swap them each iteration
+(newTerm = A + B, then A and B rotate). The term counter lives in F because every arithmetic
+op would otherwise overwrite A; the program stages F through M each iteration to decrement it
+by 1 and loop back until it goes negative, then stops.

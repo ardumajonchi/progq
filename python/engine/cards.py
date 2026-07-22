@@ -96,3 +96,117 @@ def demo_countdown_card() -> ProgramCard:
     ]
     labels = {1: 0, 2: 4}
     return ProgramCard(title="Countdown demo", instructions=instructions, labels=labels)
+
+
+def fibonacci_card() -> ProgramCard:
+    """Prints the first 10 Fibonacci terms. Setup: select F, clear, type 9, add with no
+    register, exchange with A (F holds the term counter); select B, clear, type 1, add with no
+    register (A=1, B=0 are the first two terms). Uses C/D as exchange scratch and M as a
+    counter-swap staging register since every arithmetic op always targets A."""
+    from .instructions import (
+        OP_ADD,
+        OP_CLEAR,
+        OP_COND_JUMP,
+        OP_DIGIT,
+        OP_EXCHANGE_A,
+        OP_JUMP,
+        OP_PRINT,
+        OP_STOP,
+        OP_SUB,
+    )
+
+    loop_body = [
+        Instruction(operator=OP_PRINT, register="A"),
+        Instruction(operator=OP_CLEAR, register="C"),
+        Instruction(operator=OP_CLEAR, register="D"),
+        Instruction(operator=OP_EXCHANGE_A, register="C"),
+        Instruction(operator=OP_ADD, register="B"),
+        Instruction(operator=OP_ADD, register="C"),
+        Instruction(operator=OP_EXCHANGE_A, register="D"),
+        Instruction(operator=OP_EXCHANGE_A, register="C"),
+        Instruction(operator=OP_EXCHANGE_A, register="B"),
+        Instruction(operator=OP_EXCHANGE_A, register="D"),
+        Instruction(operator=OP_EXCHANGE_A, register="M"),
+        Instruction(operator=OP_EXCHANGE_A, register="F"),
+        Instruction(operator=OP_DIGIT, operand="1"),
+        Instruction(operator=OP_SUB),
+        Instruction(operator=OP_EXCHANGE_A, register="F"),
+        Instruction(operator=OP_EXCHANGE_A, register="M"),
+        Instruction(operator=OP_COND_JUMP, operand=2),
+        Instruction(operator=OP_JUMP, operand=1),
+    ]
+    instructions = loop_body + [Instruction(operator=OP_STOP)]
+    labels = {1: 0, 2: len(loop_body)}
+    return ProgramCard(title="Fibonacci sequence", instructions=instructions, labels=labels)
+
+
+def compound_interest_card() -> ProgramCard:
+    """Prints an investment's balance after each year of compounding. Setup: select F, clear,
+    type (years-1), add with no register, exchange with A (F holds the year counter); select M,
+    clear, type the growth factor e.g. 1.05 for 5%, add with no register, exchange with A; type
+    the principal, add with no register into A."""
+    from .instructions import (
+        OP_ADD,
+        OP_CLEAR,
+        OP_COND_JUMP,
+        OP_DIGIT,
+        OP_EXCHANGE_A,
+        OP_JUMP,
+        OP_MUL,
+        OP_PRINT,
+        OP_STOP,
+        OP_SUB,
+    )
+
+    loop_body = [
+        Instruction(operator=OP_MUL, register="M"),
+        Instruction(operator=OP_PRINT, register="A"),
+        Instruction(operator=OP_EXCHANGE_A, register="C"),
+        Instruction(operator=OP_EXCHANGE_A, register="F"),
+        Instruction(operator=OP_DIGIT, operand="1"),
+        Instruction(operator=OP_SUB),
+        Instruction(operator=OP_EXCHANGE_A, register="F"),
+        Instruction(operator=OP_EXCHANGE_A, register="C"),
+        Instruction(operator=OP_COND_JUMP, operand=2),
+        Instruction(operator=OP_JUMP, operand=1),
+    ]
+    instructions = loop_body + [Instruction(operator=OP_STOP)]
+    labels = {1: 0, 2: len(loop_body)}
+    return ProgramCard(title="Compound interest", instructions=instructions, labels=labels)
+
+
+def pythagorean_card() -> ProgramCard:
+    """Prints the hypotenuse c = sqrt(a^2 + b^2). Setup: type side b, add with no register
+    into A, exchange with B (B now holds side b, A is cleared); type side a, add with no
+    register into A."""
+    from .instructions import OP_ADD, OP_EXCHANGE_A, OP_MUL, OP_PRINT, OP_SQRT, OP_STOP
+
+    instructions = [
+        Instruction(operator=OP_MUL, register="A"),
+        Instruction(operator=OP_EXCHANGE_A, register="C"),
+        Instruction(operator=OP_ADD, register="B"),
+        Instruction(operator=OP_MUL, register="B"),
+        Instruction(operator=OP_ADD, register="C"),
+        Instruction(operator=OP_SQRT),
+        Instruction(operator=OP_PRINT),
+        Instruction(operator=OP_STOP),
+    ]
+    return ProgramCard(title="Pythagorean theorem", instructions=instructions, labels={1: 0})
+
+
+def moon_landing_card() -> ProgramCard:
+    """Prints the impact velocity v = sqrt(2*g*h) of a free-falling object under lunar gravity
+    (g=1.62 m/s^2) -- the class of descent-trajectory calculation that made the Programma 101
+    famous when NASA engineers used one to help verify Apollo 11's lunar module descent. Setup:
+    clear, type 2, add with no register, exchange with B; type 1.62, add with no register,
+    exchange with M; type the drop height h in meters, add with no register into A."""
+    from .instructions import OP_EXCHANGE_A, OP_MUL, OP_PRINT, OP_SQRT, OP_STOP
+
+    instructions = [
+        Instruction(operator=OP_MUL, register="M"),
+        Instruction(operator=OP_MUL, register="B"),
+        Instruction(operator=OP_SQRT),
+        Instruction(operator=OP_PRINT),
+        Instruction(operator=OP_STOP),
+    ]
+    return ProgramCard(title="Moon landing descent velocity", instructions=instructions, labels={1: 0})
