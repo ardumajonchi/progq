@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (C) Programma 101 Emulator contributors
+# SPDX-FileCopyrightText: Copyright (C) Programma Q Emulator contributors
 #
 # SPDX-License-Identifier: MPL-2.0
 """Thin wrapper over Bridge RPCs to the paired MCU, which drives a physical Modulino Buzzer and the

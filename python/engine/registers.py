@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (C) Programma 101 Emulator contributors
+# SPDX-FileCopyrightText: Copyright (C) Programma Q Emulator contributors
 #
 # SPDX-License-Identifier: MPL-2.0
 """Register model for the Programma 101: ten registers -- M, A, R, B, C, D, E, F, p1, p2. Five of
