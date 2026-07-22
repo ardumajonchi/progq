@@ -22,27 +22,29 @@ Arduino_LED_Matrix matrix;
 #define CROSSFADE_MS 400UL
 #define PULSE_PERIOD_MS 1400UL
 
-// 8x13 grayscale bitmaps (0-4, one byte per pixel), downsampled from the Olivetti and Elea logos.
+// 8x13 pure black & white bitmaps (0/1, one byte per pixel), downsampled from the Olivetti and
+// Elea logos and thresholded to strict on/off -- this matrix doesn't render shades of gray well,
+// so every pixel the MCU ever draws is fully lit or fully dark, never an intermediate brightness.
 static const uint8_t OLIVETTI_FRAME[8 * 13] = {
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 1, 3, 2, 3, 3, 3, 2, 3, 1, 0, 0,
-  0, 0, 2, 4, 3, 3, 3, 3, 3, 4, 2, 0, 0,
-  0, 0, 2, 3, 4, 1, 0, 1, 3, 3, 2, 0, 0,
-  0, 0, 2, 3, 3, 3, 2, 3, 4, 4, 3, 1, 0,
-  0, 0, 2, 4, 3, 3, 3, 4, 3, 4, 2, 0, 0,
-  0, 0, 1, 2, 2, 2, 2, 2, 2, 3, 1, 0, 0,
+  0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0,
+  0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+  0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0,
+  0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+  0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+  0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
 static const uint8_t ELEA_FRAME[8 * 13] = {
-  3, 3, 0, 3, 2, 2, 4, 3, 1, 3, 0, 2, 3,
-  1, 2, 3, 4, 3, 3, 2, 3, 3, 4, 3, 3, 1,
-  2, 2, 4, 4, 4, 3, 2, 3, 4, 4, 4, 2, 2,
-  3, 3, 2, 3, 2, 3, 3, 3, 2, 3, 2, 3, 3,
-  3, 3, 2, 3, 2, 3, 3, 3, 2, 3, 2, 3, 3,
-  2, 2, 4, 4, 4, 3, 2, 3, 4, 4, 4, 2, 2,
-  1, 3, 3, 4, 3, 3, 2, 3, 3, 4, 3, 3, 1,
-  3, 3, 0, 3, 1, 2, 4, 3, 1, 3, 0, 3, 3,
+  1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
+  0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0,
+  0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0,
+  1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1,
+  1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1,
+  0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0,
+  0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0,
+  1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 1,
 };
 
 uint8_t matrixMode = MODE_IDLE;
@@ -54,13 +56,20 @@ const uint8_t *frameFor(uint8_t m) {
   return (m == MODE_CALCULATING) ? ELEA_FRAME : OLIVETTI_FRAME;
 }
 
-// Triangle-wave brightness multiplier, so a held Elea frame still reads as "working" rather than
-// looking identical to a finished/frozen render during a longer program run.
-float pulseFactor(unsigned long t) {
+// Deterministic per-pixel "switch order" within the crossfade window: a dissolve transition flips
+// each pixel from the old frame to the new one at a different moment instead of blending
+// brightness, so every pixel the MCU ever writes is exactly 0 or 1, never an in-between shade.
+uint8_t ditherRank(int i) {
+  return (uint8_t)((i * 37) % (8 * 13));
+}
+
+// Triangle wave in [0, 1], used to gate a checkerboard dim mask while MODE_CALCULATING so the held
+// Elea frame still visibly "breathes" during a long-running program, without ever emitting a gray
+// pixel -- half the lit pixels blink off on a period instead of the whole frame dimming smoothly.
+float triangleWave(unsigned long t) {
   unsigned long ph = t % PULSE_PERIOD_MS;
   float x = (float)ph / (float)PULSE_PERIOD_MS;
-  float tri = (x < 0.5f) ? (x * 2.0f) : (2.0f - x * 2.0f);
-  return 0.6f + 0.4f * tri;
+  return (x < 0.5f) ? (x * 2.0f) : (2.0f - x * 2.0f);
 }
 
 void renderMatrixFrame(unsigned long t) {
@@ -68,19 +77,22 @@ void renderMatrixFrame(unsigned long t) {
   const uint8_t *to = frameFor(matrixMode);
   unsigned long elapsed = t - matrixModeChangedAt;
 
-  if (elapsed >= CROSSFADE_MS) {
-    if (matrixMode == MODE_CALCULATING) {
-      float factor = pulseFactor(t - matrixModeChangedAt - CROSSFADE_MS);
-      for (int i = 0; i < 8 * 13; i++) frame[i] = (uint8_t)(to[i] * factor + 0.5f);
-    } else {
-      for (int i = 0; i < 8 * 13; i++) frame[i] = to[i];
+  if (elapsed < CROSSFADE_MS) {
+    uint8_t cutoff = (uint8_t)(((unsigned long)(8 * 13) * elapsed) / CROSSFADE_MS);
+    for (int i = 0; i < 8 * 13; i++) {
+      frame[i] = (ditherRank(i) < cutoff) ? to[i] : from[i];
     }
     return;
   }
 
-  float alpha = (float)elapsed / (float)CROSSFADE_MS;
-  for (int i = 0; i < 8 * 13; i++) {
-    frame[i] = (uint8_t)(from[i] + (to[i] - from[i]) * alpha + 0.5f);
+  if (matrixMode == MODE_CALCULATING) {
+    bool dim = triangleWave(elapsed - CROSSFADE_MS) < 0.5f;
+    for (int i = 0; i < 8 * 13; i++) {
+      bool checker = ((i / 13 + i % 13) % 2) == 0;
+      frame[i] = (dim && !checker) ? 0 : to[i];
+    }
+  } else {
+    for (int i = 0; i < 8 * 13; i++) frame[i] = to[i];
   }
 }
 
@@ -109,7 +121,7 @@ void setup() {
   Bridge.provide("play_tone", playTone);
 
   matrix.begin();
-  matrix.setGrayscaleBits(3);
+  matrix.setGrayscaleBits(1);  // frame[] is strictly 0/1 now -- 1 must mean fully lit, not 1/7 dim
   Bridge.provide("set_matrix_mode", setMatrixMode);
 }
 
