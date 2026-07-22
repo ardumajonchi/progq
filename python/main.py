@@ -34,7 +34,15 @@ from arduino.app_bricks.web_ui import WebUI
 from arduino.app_utils import App
 
 from cardstore import CardStore
-from engine.cards import CardError, ProgramCard, demo_countdown_card
+from engine.cards import (
+    CardError,
+    ProgramCard,
+    compound_interest_card,
+    demo_countdown_card,
+    fibonacci_card,
+    moon_landing_card,
+    pythagorean_card,
+)
 from engine.cpu import CpuError, Machine
 from engine.instructions import Instruction, START_KEYS
 from engine.printer import Tape
@@ -64,7 +72,14 @@ def main():
 
     card_store = CardStore(_DB_NAME)
     if not card_store.list_titles():
-        card_store.save(demo_countdown_card())
+        for card_factory in (
+            demo_countdown_card,
+            fibonacci_card,
+            compound_interest_card,
+            pythagorean_card,
+            moon_landing_card,
+        ):
+            card_store.save(card_factory())
 
     try:
         hw = Hardware()

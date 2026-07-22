@@ -1,0 +1,29 @@
+Programma 101 emulator -- example program card
+Title: Moon landing descent velocity
+
+WHAT IT DOES
+Prints the impact velocity v = sqrt(2 * g * h) of an object in free fall under lunar gravity
+(g = 1.62 m/s^2) after dropping height h meters -- the kind of descent-trajectory arithmetic
+that made the Programma 101 famous: NASA engineers reportedly used one to help cross-check
+Apollo 11's lunar module descent calculations in 1969, alongside the mission's onboard
+computers.
+
+SETUP (key presses before pressing V)
+  1. Press 2, then +                  (A = 2, no register selected)
+  2. Press B, then Ahat                (select B, exchange with A: B = 2, A = 0)
+  3. Press 1, ., 6, 2, then +            (A = 1.62, lunar gravity in m/s^2)
+  4. Press M, then Ahat                   (select M, exchange with A: M = 1.62, A = 0)
+  5. Type the drop height h in meters, then press +   (A = h, e.g. 100 for a 100m drop)
+  6. Press V to run
+
+Notes: "Ahat" is the A-hat key (exchange with A). Always press an operation key right after
+selecting a register and before typing a fresh number.
+
+EXAMPLE
+  Height h = 100m -> tape prints: 18   (impact velocity in m/s)
+
+HOW IT WORKS
+The program multiplies the height in A by g (from M) and then by 2 (from B), leaving
+2*g*h in A, then takes the square root -- the standard free-fall impact-velocity formula
+derived from v^2 = 2*g*h. Swap the constant in B/M for Earth gravity (9.81) to compare an
+equivalent drop on Earth.

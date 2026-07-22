@@ -393,3 +393,21 @@ html, body {
   font-size: 11px;
   padding: 8px 12px;
 }
+
+/* -- side panel: how-to-use instructions ---------------------------------------------------- */
+
+#help-steps {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #5a5040;
+}
+
+#help-steps li {
+  margin-bottom: 6px;
+}
+
+#help-steps b {
+  color: var(--ink);
+}

@@ -1,0 +1,33 @@
+Programma 101 emulator -- example program card
+Title: Compound interest
+
+WHAT IT DOES
+Prints an investment's balance after each year of compounding, e.g. $1000 growing at 5% a
+year for 5 years: 1050, 1102.5, 1157.625, 1215.50625, 1276.2815625.
+
+SETUP (key presses before pressing V)
+  1. Press 4, then +                (A = 4, one less than the number of years)
+  2. Press F, then Ahat               (select F, exchange with A: F = 4, A = 0)
+  3. Press 1, ., 0, 5, then +          (A = 1.05, the growth factor for 5% -- change this
+                                        for a different rate, e.g. 1.03 for 3%)
+  4. Press M, then Ahat                 (select M, exchange with A: M = 1.05, A = 0)
+  5. Press 1, 0, 0, 0, then +            (A = 1000, the starting principal -- change this
+                                          for a different starting amount)
+  6. Press V to run
+
+Notes: "Ahat" is the A-hat key (exchange with A). Always press an operation key (+, Ahat, *)
+right after selecting a register and before typing a fresh number, since the selection stays
+active through digit keys.
+
+EXPECTED TAPE OUTPUT (for the defaults above: $1000 at 5% for 5 years)
+  1050
+  1102.5
+  1157.625
+  1215.50625
+  1276.2815625
+
+HOW IT WORKS
+The growth factor lives in M and is multiplied into A (the running balance) once per year,
+printing the new balance each time. The year counter lives in F, decremented by 1 each pass
+through C as scratch (every arithmetic key always targets A, so the counter can't live there
+without clobbering the balance) until it goes negative, at which point the loop stops.
