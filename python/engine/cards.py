@@ -14,7 +14,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 
-from .instructions import MAX_LABEL, Instruction
+from .instructions import MAX_LABEL, OP_COND_JUMP, OP_DIGIT, OP_JUMP, Instruction
 
 FULL_CAPACITY = 120
 PARTIAL_CAPACITY = 48
@@ -81,11 +81,76 @@ class ProgramCard:
             capacity=record["capacity"],
         )
 
+    def to_text(self) -> str:
+        """Human-readable plain-text card format, for the browser's card download/upload
+        feature -- one instruction per line as `operator [reg=X] [operand=Y]`, preceded by a
+        small header of `key: value` lines. Round-trips exactly through `from_text`."""
+        lines = [
+            f"title: {self.title}",
+            f"capacity: {self.capacity}",
+            "labels: " + ",".join(f"{label}={index}" for label, index in sorted(self.labels.items())),
+            "---",
+        ]
+        for instr in self.instructions:
+            parts = [instr.operator]
+            if instr.register is not None:
+                parts.append(f"reg={instr.register}")
+            if instr.operand is not None:
+                parts.append(f"operand={instr.operand}")
+            lines.append(" ".join(parts))
+        return "\n".join(lines) + "\n"
+
+    @classmethod
+    def from_text(cls, text: str) -> "ProgramCard":
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        title = None
+        capacity = FULL_CAPACITY
+        labels: dict[int, int] = {}
+        body_start = 0
+        for i, line in enumerate(lines):
+            if line == "---":
+                body_start = i + 1
+                break
+            if line.startswith("title:"):
+                title = line[len("title:") :].strip()
+            elif line.startswith("capacity:"):
+                capacity = int(line[len("capacity:") :].strip())
+            elif line.startswith("labels:"):
+                raw = line[len("labels:") :].strip()
+                if raw:
+                    for pair in raw.split(","):
+                        label_str, index_str = pair.split("=")
+                        labels[int(label_str)] = int(index_str)
+            else:
+                raise CardError(f"malformed card header line: {line!r}")
+        if title is None:
+            raise CardError("card text is missing a 'title:' header line")
+
+        instructions = []
+        for line in lines[body_start:]:
+            tokens = line.split()
+            operator = tokens[0]
+            register = None
+            operand: str | int | None = None
+            for token in tokens[1:]:
+                key, _, value = token.partition("=")
+                if key == "reg":
+                    register = value
+                elif key == "operand":
+                    operand = int(value) if operator in (OP_JUMP, OP_COND_JUMP) else value
+                else:
+                    raise CardError(f"malformed instruction line: {line!r}")
+            if operator == OP_DIGIT and operand is not None:
+                operand = str(operand)
+            instructions.append(Instruction(operator=operator, register=register, operand=operand))
+
+        return cls(title=title, instructions=instructions, labels=labels, capacity=capacity)
+
 
 def demo_countdown_card() -> ProgramCard:
     """The bundled demo, matching EMU101's own: "Press V, 10, S" -- a simple countdown-by-one
     loop from an operator-entered starting value down to zero, printing each step."""
-    from .instructions import OP_COND_JUMP, OP_JUMP, OP_PRINT, OP_STOP, OP_SUB
+    from .instructions import OP_PRINT, OP_STOP, OP_SUB
 
     instructions = [
         Instruction(operator=OP_PRINT, register="A"),

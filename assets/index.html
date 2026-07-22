@@ -1,4 +1,9 @@
 <!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: Copyright (C) Programma 101 Emulator contributors
+
+SPDX-License-Identifier: MPL-2.0
+-->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -96,6 +101,10 @@
       <section class="panel-block" id="cards-panel">
         <h3>CARDS</h3>
         <ul id="card-list"></ul>
+        <div id="upload-row">
+          <label class="key" id="upload-label" for="card-upload">UPLOAD CARD (.txt)</label>
+          <input type="file" id="card-upload" accept=".txt,text/plain" hidden>
+        </div>
       </section>
 
       <section class="panel-block" id="help-panel">
