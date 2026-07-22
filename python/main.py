@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (C) Programma 101 Emulator contributors
+# SPDX-FileCopyrightText: Copyright (C) Programma Q Emulator contributors
 #
 # SPDX-License-Identifier: MPL-2.0
 """Orchestrator: wires the Programma 101 emulation core to the arduino:web_ui Brick. Unlike a

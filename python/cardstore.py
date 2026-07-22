@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (C) Programma 101 Emulator contributors
+# SPDX-FileCopyrightText: Copyright (C) Programma Q Emulator contributors
 #
 # SPDX-License-Identifier: MPL-2.0
 """Program card persistence on top of the arduino:dbstorage_sqlstore Brick. Every query that

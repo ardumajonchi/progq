@@ -5,7 +5,7 @@ calculator/proto-PC. Built on the official `arduino:web_ui` and `arduino:dbstora
 Bricks, with keyboard-click sound effects on a physical Modulino Buzzer and the Olivetti/Elea
 logos animating on the UNO Q's onboard LED matrix.
 
-![Programma 101 UI](docs/screenshot.png)
+![Programma Q UI](docs/screenshot.png)
 
 *The panel mid-way through the bundled "Countdown demo" card: the tape shows the counted-down
 values ending at `0`, register A holds `-1` (the loop's final decrement past zero) and M holds `1`

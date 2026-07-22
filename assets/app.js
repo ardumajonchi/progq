@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright (C) Programma 101 Emulator contributors
+// SPDX-FileCopyrightText: Copyright (C) Programma Q Emulator contributors
 //
 // SPDX-License-Identifier: MPL-2.0
 //
@@ -173,7 +173,7 @@ async function shareTape() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "programma101-tape.txt";
+  a.download = "programma-q-tape.txt";
   a.click();
   URL.revokeObjectURL(url);
 }

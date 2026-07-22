@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (C) Programma 101 Emulator contributors
+# SPDX-FileCopyrightText: Copyright (C) Programma Q Emulator contributors
 #
 # SPDX-License-Identifier: MPL-2.0
 """Instruction model: one P101 program step is a (register, operator) pair, matching how the real
