@@ -2,7 +2,8 @@
 
 A web-based emulator of the Olivetti Programma 101, the 1965 programmable desktop
 calculator/proto-PC. Built on the official `arduino:web_ui` and `arduino:dbstorage_sqlstore`
-Bricks, with keyboard-click sound effects on a physical Modulino Buzzer.
+Bricks, with keyboard-click sound effects on a physical Modulino Buzzer and the Olivetti/Elea
+logos animating on the UNO Q's onboard LED matrix.
 
 ![Programma 101 UI](docs/screenshot.png)
 
@@ -16,7 +17,9 @@ Deploy with the Arduino App CLI like any other app Brick bundle (`app.yaml` decl
 `arduino:web_ui` and `arduino:dbstorage_sqlstore` Bricks and exposes port 7000). Once deployed,
 open the app's URL (`http://<device-ip>:7000/`) in a browser to use it. Attach a Modulino Buzzer
 to the paired MCU for keyboard-click, error, and printer-chatter sounds — the app runs fine
-without one, silently skipping the tones.
+without one, silently skipping the tones. The onboard LED matrix shows the Olivetti logo while
+idle and crossfades into a pulsing Elea logo while a program (`V`/`W`/`Y`/`Z`) is running,
+degrading to no matrix updates the same way the buzzer does if the MCU isn't attached.
 
 ## User guide
 
@@ -157,6 +160,14 @@ the expected tape output, and a short explanation of how the program works.
 - **Sound.** `sketch/` runs on the paired MCU and drives a physical Modulino Buzzer via a single
   `play_tone(freq, ms)` Bridge RPC; `python/hw.py` calls it for keyboard clicks, errors, and
   printer chatter, degrading to silent UI-only operation if no buzzer/MCU is attached.
+- **LED matrix.** The same `sketch/` also drives the UNO Q's onboard LED matrix via a single
+  `set_matrix_mode(mode)` Bridge RPC, mirroring conquest-q's approach: the MCU renders the current
+  mode as a pure function of `millis()`, so the animation never blocks on or waits for the Linux
+  side. `python/hw.py`'s `show_idle()`/`show_calculating()` toggle the mode; `python/main.py` calls
+  `show_calculating()` before `Machine.run_from()` and `show_idle()` after, so the matrix reflects
+  whether the emulator is idle or a program is running. The idle mode shows a static, downsampled
+  8x13 rendering of the Olivetti logo; the calculating mode crossfades into the Elea logo and
+  pulses its brightness while active.
 
 ## License
 
@@ -166,4 +177,3 @@ implementation written from the Programma 101's public documentation, carries an
 header, and is licensed under MPL-2.0. The one vendored third-party file, `assets/socket.io.min.js`
 (Socket.IO, © Guillermo Rauch), is separately licensed under the MIT License and retains its own
 license notice, which is permissive and compatible with MPL-2.0.
-
