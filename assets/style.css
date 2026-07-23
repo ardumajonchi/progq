@@ -109,11 +109,33 @@ html, body {
 
 #error-box {
   flex: 1.4;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
 }
 
 #error-display {
   color: var(--error);
   font-size: 14px;
+}
+
+.ai-explain-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 12px;
+  padding: 0;
+  flex-shrink: 0;
+  background: #3a5a6a;
+}
+
+.ai-explain-btn:hover {
+  background: #4a7080;
+}
+
+.ai-explain-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
 
 /* -- key clusters ----------------------------------------------------------------------- */
@@ -381,6 +403,72 @@ html, body {
 
 .card-dl:hover {
   color: #4a6f4a;
+}
+
+.card-explain {
+  background: none;
+  border: none;
+  color: #3a5a6a;
+  cursor: pointer;
+  font-weight: bold;
+  padding: 2px 6px;
+}
+
+.card-explain:hover {
+  color: #4a7080;
+}
+
+.card-explain:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* -- side panel: AI operator ---------------------------------------------------------------- */
+
+#ai-operator-row {
+  display: flex;
+  gap: 6px;
+}
+
+#ai-operator-input {
+  flex: 1;
+  font-family: inherit;
+  padding: 6px;
+  border: 1px solid var(--case-shadow);
+  border-radius: 4px;
+  background: var(--tape-bg);
+}
+
+#ai-operator-input:disabled {
+  opacity: 0.5;
+}
+
+#ai-operator-btn {
+  padding: 6px 12px;
+  font-size: 11px;
+  background: #3a5a6a;
+}
+
+#ai-operator-btn:hover {
+  background: #4a7080;
+}
+
+#ai-operator-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ai-reply-box {
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--tape-bg);
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #2a2620;
+  white-space: pre-wrap;
+  max-height: 160px;
+  overflow-y: auto;
 }
 
 #upload-row {

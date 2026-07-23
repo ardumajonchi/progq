@@ -40,6 +40,7 @@ function renderReadouts(state) {
   document.getElementById("m-display").textContent = registerText(state.registers.M);
   document.getElementById("r-display").textContent = registerText(state.registers.R);
   document.getElementById("error-display").textContent = state.blocked_error || "";
+  document.getElementById("explain-error-btn").disabled = !state.ai_available || !state.blocked_error;
 }
 
 function renderRecording(state) {
@@ -70,6 +71,16 @@ function renderCards(state) {
     dl.title = "Download as .txt";
     dl.href = `/api/export_card?title=${encodeURIComponent(title)}`;
     dl.addEventListener("click", (evt) => evt.stopPropagation());
+    const explain = document.createElement("button");
+    explain.className = "card-explain";
+    explain.textContent = "?";
+    explain.title = "Ask the AI Assistant to explain this card";
+    explain.disabled = !state.ai_available;
+    explain.addEventListener("click", (evt) => {
+      evt.stopPropagation();
+      sendKey({ ai_explain_card: { title } });
+      showAiReply(`Explaining "${title}"...`);
+    });
     const del = document.createElement("button");
     del.className = "card-del";
     del.textContent = "✕";
@@ -79,9 +90,44 @@ function renderCards(state) {
     });
     li.appendChild(span);
     li.appendChild(dl);
+    li.appendChild(explain);
     li.appendChild(del);
     list.appendChild(li);
   }
+}
+
+function showAiReply(text) {
+  const box = document.getElementById("ai-reply-box");
+  box.hidden = false;
+  box.textContent = text;
+}
+
+function onAiReply(payload) {
+  if (payload.kind === "operator") {
+    showAiReply(payload.log.join("\n"));
+  } else {
+    showAiReply(payload.text);
+  }
+}
+
+function setupAiOperator() {
+  document.getElementById("ai-operator-btn").addEventListener("click", () => {
+    const input = document.getElementById("ai-operator-input");
+    const request = input.value.trim();
+    if (!request) return;
+    sendKey({ ai_operator: { request } });
+    showAiReply("Working...");
+  });
+  document.getElementById("explain-error-btn").addEventListener("click", () => {
+    sendKey({ ai_explain_error: true });
+    showAiReply("Explaining error...");
+  });
+}
+
+
+function renderAiAvailability(state) {
+  document.getElementById("ai-operator-input").disabled = !state.ai_available;
+  document.getElementById("ai-operator-btn").disabled = !state.ai_available;
 }
 
 function onState(payload) {
@@ -90,6 +136,7 @@ function onState(payload) {
   renderReadouts(latestState);
   renderRecording(latestState);
   renderCards(latestState);
+  renderAiAvailability(latestState);
 }
 
 function setupKeypad() {
@@ -215,9 +262,11 @@ function main() {
   setupLabels();
   setupCommit();
   setupUpload();
+  setupAiOperator();
 
   socket = io();
   socket.on("state", onState);
+  socket.on("ai_reply", onAiReply);
 }
 
 main();
