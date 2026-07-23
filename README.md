@@ -1,25 +1,27 @@
 # Programma Q - A Programma 101 Emulator
 
 A web-based emulator of the Olivetti Programma 101, the 1965 programmable desktop
-calculator/proto-PC. Built on the official `arduino:web_ui` and `arduino:dbstorage_sqlstore`
-Bricks, with keyboard-click sound effects on a physical Modulino Buzzer and the Olivetti/Elea
-logos animating on the UNO Q's onboard LED matrix.
+calculator/proto-PC. Built on the official `arduino:web_ui`, `arduino:dbstorage_sqlstore`, and
+`arduino:llm` Bricks, with keyboard-click sound effects on a physical Modulino Buzzer and the
+Olivetti/Elea logos animating on the UNO Q's onboard LED matrix.
 
 ![Programma Q UI](docs/screenshot.png)
 
-*The panel mid-way through the bundled "Countdown demo" card: the tape shows the counted-down
-values ending at `0`, register A holds `-1` (the loop's final decrement past zero) and M holds `1`
-(the step size).*
+*A blocked `DIVISION BY ZERO` error, with the "?" button ready to ask the AI Assistant to explain
+it in plain English, and the AI OPERATOR panel in the side column ready to take a natural-language
+request and drive the keyboard itself.*
 
 ## Running it
 
 Deploy with the Arduino App CLI like any other app Brick bundle (`app.yaml` declares the
-`arduino:web_ui` and `arduino:dbstorage_sqlstore` Bricks and exposes port 7000). Once deployed,
-open the app's URL (`http://<device-ip>:7000/`) in a browser to use it. Attach a Modulino Buzzer
-to the paired MCU for keyboard-click, error, and printer-chatter sounds — the app runs fine
-without one, silently skipping the tones. The onboard LED matrix shows the Olivetti logo while
-idle and crossfades into a pulsing Elea logo while a program (`V`/`W`/`Y`/`Z`) is running,
-degrading to no matrix updates the same way the buzzer does if the MCU isn't attached.
+`arduino:web_ui`, `arduino:dbstorage_sqlstore`, and `arduino:llm` Bricks, and exposes port 7000).
+Once deployed, open the app's URL (`http://<device-ip>:7000/`) in a browser to use it. Attach a
+Modulino Buzzer to the paired MCU for keyboard-click, error, and printer-chatter sounds — the app
+runs fine without one, silently skipping the tones. The onboard LED matrix shows the Olivetti logo
+while idle and crossfades into a pulsing Elea logo while a program (`V`/`W`/`Y`/`Z`) is running,
+degrading to no matrix updates the same way the buzzer does if the MCU isn't attached. The AI
+Operator and Assistant (below) likewise degrade to disabled/unavailable if the `arduino:llm` Brick
+isn't attached or fails to initialize.
 
 ## User guide
 
@@ -103,6 +105,21 @@ recording a new one) for anyone using the panel without this README open.
 **CLR TAPE** clears the tape display. **SHARE TAPE** downloads the current tape's full contents
 as a text file.
 
+### AI Operator and Assistant
+
+Two AI features run on the on-device `arduino:llm` Brick, and both disable themselves gracefully
+(showing as unavailable) if that Brick isn't attached or fails to start:
+
+- **AI Operator** (side panel) takes a natural-language request — e.g. "compute 12 times 7" —
+  and drives it to completion by pressing real keys one at a time, exactly like a human operator
+  would: it can only take the same actions available on the keyboard, so it can press a wrong key
+  (recoverable, just like a human mistake) but it can never fabricate an answer that bypasses the
+  emulator's real arithmetic. Type a request into the box and press **RUN**; the reply area below
+  shows the full trace of keys it pressed and what happened after each one.
+- **AI Assistant** ("?" buttons) explains things in plain English on demand: the "?" next to the
+  error readout explains why the machine is currently blocked and what to try next, and the "?"
+  next to each saved card in the CARDS list explains what that program computes and how.
+
 ## The bundled "Countdown demo" card
 
 Every fresh install seeds one demo card, `Countdown demo`, matching the classic demo EMU101
@@ -120,8 +137,7 @@ To run it from a clean start: type `1`, press `+` (A = 1), press `Â` with **M**
 A = 0), type your starting number (e.g. `10`), press `+` (A = 10), load the "Countdown demo" card
 from the CARDS panel if it isn't already loaded, and press **V**. The tape prints each value
 counting down from your starting number to `0`, then one more decrement pushes A negative, the
-conditional jump fires, and the program stops — leaving A at `-1` and M at `1`, exactly as shown
-in the screenshot above.
+conditional jump fires, and the program stops — leaving A at `-1` and M at `1`.
 
 ## Bundled example cards
 
@@ -168,6 +184,16 @@ the expected tape output, and a short explanation of how the program works.
   whether the emulator is idle or a program is running. The idle mode shows a static, downsampled
   8x13 rendering of the Olivetti logo; the calculating mode crossfades into the Elea logo and
   pulses its brightness while active.
+- **AI agents.** `python/agents/operator.py` and `python/agents/assistant.py` both run on the
+  on-device `arduino:llm` Brick. The AI Operator's tool-calling functions dispatch through the
+  exact same validated key-press handlers `python/main.py` exposes to a human's browser clicks, so
+  the LLM is never in the calculation path — it can only press a (recoverable) wrong key, never
+  produce a wrong answer that bypasses `engine.cpu.Machine`'s real checks; since the Brick's
+  tool-calling invokes at most one tool per call, `OperatorAgent.run()` drives its own multi-step
+  call/observe loop. The Assistant is purely explanatory (plain chat, no tools) and never mutates
+  machine/tape/card state. Both run on background threads guarded by `python/main.py`'s
+  `_state_lock`, replying over a separate `"ai_reply"` broadcast so they don't block a human still
+  clicking keys on the same session.
 
 ## License
 
