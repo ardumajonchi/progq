@@ -1,37 +1,32 @@
 # Programma Q - A Programma 101 Emulator
 
 A web-based emulator of the Olivetti Programma 101, the 1965 programmable desktop
-calculator/proto-PC. Built on the official `arduino:web_ui`, `arduino:dbstorage_sqlstore`, and
-`arduino:llm` Bricks, with keyboard-click sound effects on a physical Modulino Buzzer and the
-Elea logo animating on the UNO Q's onboard LED matrix.
+calculator/proto-PC. Built on the official `WebUI`, `Database - SQL`, and
+Local `LLM` Bricks, with keyboard-click sound effects on a physical Modulino Buzzer (optional) and the
+animation on the UNO Q's onboard LED matrix.
 
 ![Programma Q UI](docs/screenshot.png)
-
-*A blocked `DIVISION BY ZERO` error, with the "?" button ready to ask the AI Assistant to explain
-it in plain English, and the AI OPERATOR panel in the side column ready to take a natural-language
-request and drive the keyboard itself. The register-setup hint above the start keys shows the key
-sequence a loaded example card expects before it's run.*
 
 ## History
 
 ### The Programma 101
 
 The Programma 101 (nicknamed "Perottina" after its lead engineer, Pier Giorgio Perotto) was
-released by Olivetti in 1965 as a "desktop programmable calculator" -- there was no established
+released by Olivetti in 1965 as a "desktop programmable calculator"; there was no established
 category for it yet, because nothing quite like it had shipped before. It had no operating system,
 no general-purpose display, and no monitor: input came from a keyboard, output from a small
 built-in printer, and the entire "program" for a task lived on a small magnetic card the size of a
 credit card, which the machine could read back in and re-run. Despite that, it was Turing-complete,
 programmable by ordinary (non-specialist) users, and small and cheap enough to sit on a desk rather
-than fill a room -- qualities that later became defining traits of the personal computer, a
+than fill a room, qualities that later became defining traits of the personal computer, a
 category the Programma 101 predates by roughly a decade.
 
 It became famous in the United States for reasons Olivetti never advertised for: several were
 purchased by NASA, and are reported to have been used by engineers to cross-check descent-trajectory
-arithmetic for the Apollo 11 lunar module -- the same class of calculation modeled in this
+arithmetic for the Apollo 11 lunar module, the same class of calculation modeled in this
 emulator's bundled "Moon landing descent velocity" example card. The U.S. Air Force used them for
-artillery calculations during the Vietnam War. Its industrial design -- by Mario Bellini, one of
-the era's leading Italian designers -- later earned it a place in the permanent collection of New
+artillery calculations during the Vietnam War. Its industrial design (by Mario Bellini, one of
+the era's leading Italian designers) later earned it a place in the permanent collection of New
 York's Museum of Modern Art.
 
 ### Olivetti and Ivrea
@@ -40,8 +35,8 @@ Olivetti was headquartered in Ivrea, a small town in Italy's Piedmont region, wh
 Camillo Olivetti built the company's first typewriter factory in 1908. Under his son Adriano
 Olivetti, the company became known as much for its design culture as for its engineering: Adriano
 brought in outside architects, artists, and industrial designers (Bellini among them) and treated
-product design, graphics, and even factory architecture as inseparable from the engineering itself
--- an approach still visible in Ivrea's Olivetti-era buildings, several of which are now a UNESCO
+product design, graphics, and even factory architecture as inseparable from the engineering itself, 
+an approach still visible in Ivrea's Olivetti-era buildings, several of which are now a UNESCO
 World Heritage Site ("Ivrea, Industrial City of the 20th Century"). The Elea 9000, the mainframe
 computer line whose logo idles on this emulator's LED matrix, was designed under that same
 philosophy: Ettore Sottsass styled its cabinets while Olivetti's engineers built the electronics,
@@ -54,7 +49,7 @@ Interaction Design Institute Ivrea (IDII), a design school set up in a former Ol
 specifically because of the town's design heritage. Massimo Banzi was teaching there, and it's
 where he and his collaborators (including David Cuartielles, David Mellis, Tom Igoe, and Gianluca
 Martino) built the first Arduino boards in 2005 as a cheap, approachable tool for design students
-with no electronics background to prototype interactive hardware -- a goal not far removed from
+with no electronics background to prototype interactive hardware, a goal not far removed from
 what made the Programma 101 novel in 1965: putting programmable computing within reach of people
 who weren't computer specialists. This emulator, running the ghost of a 1965 Olivetti calculator
 on a 2020s Arduino board, closes that loop in the same town's design lineage it started in.
