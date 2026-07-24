@@ -43,6 +43,17 @@ function renderReadouts(state) {
   document.getElementById("explain-error-btn").disabled = !state.ai_available || !state.blocked_error;
 }
 
+function renderCardHint(state) {
+  const box = document.getElementById("card-hint");
+  if (!state.loaded_card_hint) {
+    box.hidden = true;
+    box.textContent = "";
+    return;
+  }
+  box.hidden = false;
+  box.textContent = `${state.loaded_card_title} setup: ${state.loaded_card_hint}`;
+}
+
 function renderRecording(state) {
   const status = document.getElementById("record-status");
   const recBtn = document.getElementById("rec-btn");
@@ -137,6 +148,7 @@ function onState(payload) {
   renderRecording(latestState);
   renderCards(latestState);
   renderAiAvailability(latestState);
+  renderCardHint(latestState);
 }
 
 function setupKeypad() {

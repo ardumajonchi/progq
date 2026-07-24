@@ -275,6 +275,16 @@ html, body {
   font-size: 13px;
 }
 
+#card-hint {
+  background: #f0e6c8;
+  border: 1px dashed var(--key-accent);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #5a4020;
+}
+
 #start-keys {
   display: flex;
   gap: 8px;
@@ -288,6 +298,28 @@ html, body {
   background: #3a5a3a;
   box-shadow: 0 3px 0 #1e321e;
 }
+
+/* -- brand plate ------------------------------------------------------------------------------ */
+
+/* Olivetti's 1960s corporate identity (Walter Ballmer/Studio Pintori) favored a bold, rounded,
+   geometric sans for product nameplates -- approximated here with a system font stack (no
+   external webfont fetch, since the panel must render on an offline device) plus wide tracking
+   and small-caps to read like a machine badge rather than a UI label. */
+#brand-plate {
+  margin-top: 4px;
+  text-align: center;
+  font-family: "Century Gothic", "Futura", "Avenir Next", "Avenir", ui-sans-serif, sans-serif;
+  font-weight: 700;
+  font-variant: small-caps;
+  letter-spacing: 6px;
+  font-size: 20px;
+  color: #6a5a3a;
+}
+
+#brand-q {
+  color: var(--key-accent);
+}
+
 
 .start-key:hover {
   background: #4a6f4a;

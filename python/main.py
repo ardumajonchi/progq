@@ -28,6 +28,10 @@ A saved card can be downloaded as a .txt file via GET /api/export_card?title=...
 ProgramCard.to_text/from_text for the plain-text card format this round-trips through).
 While `record_mode` is on, "operator"/"digit" keys append to the in-progress program instead of
 executing immediately (interactive/calculator mode resumes once recording stops).
+The "state" broadcast also carries `loaded_card_title`/`loaded_card_hint`: the bundled example
+cards' logic assumes register values the card itself has no way to set (see engine.cards.
+SETUP_HINTS), so the UI shows that one-line reminder the moment a card is loaded, before V/W/Y/Z
+is pressed.
 
 AI Operator and Assistant replies are pushed back over a separate "ai_reply" broadcast (not the
 usual "state" broadcast) as {"kind": "operator"|"error"|"card", "text_or_log": ...}, since they
@@ -54,6 +58,7 @@ from engine.cards import (
     fibonacci_card,
     moon_landing_card,
     pythagorean_card,
+    setup_hint,
 )
 from engine.cpu import CpuError, Machine
 from engine.instructions import Instruction, START_KEYS
@@ -63,7 +68,14 @@ from hw import Hardware
 _DB_NAME = "cards.db"
 
 
-def public_state(machine: Machine, tape: Tape, record: dict, card_titles: list[str], ai_available: bool) -> dict:
+def public_state(
+    machine: Machine,
+    tape: Tape,
+    record: dict,
+    card_titles: list[str],
+    ai_available: bool,
+    loaded_card_title: str | None,
+) -> dict:
     return {
         "registers": machine.registers.snapshot(),
         "entry": machine.entry,
@@ -75,6 +87,8 @@ def public_state(machine: Machine, tape: Tape, record: dict, card_titles: list[s
         "card_titles": card_titles,
         "program_loaded": bool(machine.program),
         "ai_available": ai_available,
+        "loaded_card_title": loaded_card_title,
+        "loaded_card_hint": setup_hint(loaded_card_title),
     }
 
 
@@ -82,6 +96,7 @@ def main():
     machine = Machine()
     tape = Tape()
     record = {"active": False, "instructions": [], "labels": {}}
+    loaded = {"title": None}
 
     card_store = CardStore(_DB_NAME)
     if not card_store.list_titles():
@@ -122,7 +137,9 @@ def main():
 
     def broadcast_state() -> None:
         with _state_lock:
-            snapshot = public_state(machine, tape, record, card_store.list_titles(), assistant is not None)
+            snapshot = public_state(
+                machine, tape, record, card_store.list_titles(), assistant is not None, loaded["title"]
+            )
         ui.send_message("state", snapshot)
 
     def _handle_operator(operator: str, register: str | None) -> None:
@@ -131,6 +148,8 @@ def main():
             tape.echo_key(operator, register)
             return
         tape.echo_key(operator, register)
+        if hw is not None:
+            hw.pulse_calculating()
         try:
             result = machine.press_key(operator, register)
         except CpuError:
@@ -180,6 +199,7 @@ def main():
             return
         card_store.save(card)
         machine.load_program(card.instructions, card.labels)
+        loaded["title"] = card.title
         record["active"] = False
         record["instructions"] = []
         record["labels"] = {}
@@ -191,6 +211,7 @@ def main():
             buzz("error")
             return
         machine.load_program(card.instructions, card.labels)
+        loaded["title"] = card.title
         buzz("click")
 
     def _handle_upload_card(text: str) -> None:
@@ -235,6 +256,8 @@ def main():
             _handle_load_card(data["load_card"]["title"])
         elif "delete_card" in data:
             card_store.delete(data["delete_card"]["title"])
+            if loaded["title"] == data["delete_card"]["title"]:
+                loaded["title"] = None
         elif "upload_card" in data:
             _handle_upload_card(data["upload_card"]["text"])
         elif data.get("clear_tape"):
@@ -344,7 +367,9 @@ def main():
 
     def _get_state() -> dict:
         with _state_lock:
-            return public_state(machine, tape, record, card_store.list_titles(), assistant is not None)
+            return public_state(
+                machine, tape, record, card_store.list_titles(), assistant is not None, loaded["title"]
+            )
 
     ui.expose_api("GET", "/api/state", _get_state)
     ui.expose_api("GET", "/api/tape", lambda: {"text": tape.as_text()})
