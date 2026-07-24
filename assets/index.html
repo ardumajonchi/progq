@@ -22,7 +22,10 @@ SPDX-License-Identifier: MPL-2.0
         <div class="readout-box"><span class="readout-label">A</span><span id="a-display">0</span></div>
         <div class="readout-box"><span class="readout-label">M</span><span id="m-display">0</span></div>
         <div class="readout-box"><span class="readout-label">R</span><span id="r-display">0</span></div>
-        <div class="readout-box" id="error-box"><span id="error-display"></span></div>
+        <div class="readout-box" id="error-box">
+          <span id="error-display"></span>
+          <button class="key ai-explain-btn" id="explain-error-btn" title="Ask the AI Assistant to explain this error">?</button>
+        </div>
       </div>
 
       <div id="controls-row">
@@ -74,12 +77,16 @@ SPDX-License-Identifier: MPL-2.0
         <div id="step-counter">STEP <span id="step-num">0</span></div>
       </div>
 
+      <div id="card-hint" hidden></div>
+
       <div id="start-keys">
         <button class="key start-key" data-start="V">V</button>
         <button class="key start-key" data-start="W">W</button>
         <button class="key start-key" data-start="Y">Y</button>
         <button class="key start-key" data-start="Z">Z</button>
       </div>
+
+      <div id="brand-plate">PROGRAMMA <span id="brand-q">Q</span></div>
     </div>
 
     <aside id="side-panel">
@@ -105,6 +112,15 @@ SPDX-License-Identifier: MPL-2.0
           <label class="key" id="upload-label" for="card-upload">UPLOAD CARD (.txt)</label>
           <input type="file" id="card-upload" accept=".txt,text/plain" hidden>
         </div>
+      </section>
+
+      <section class="panel-block" id="ai-operator-panel">
+        <h3>AI OPERATOR</h3>
+        <div id="ai-operator-row">
+          <input id="ai-operator-input" type="text" placeholder="e.g. compute 12 times 7...">
+          <button class="key" id="ai-operator-btn">RUN</button>
+        </div>
+        <div id="ai-reply-box" class="ai-reply-box" hidden></div>
       </section>
 
       <section class="panel-block" id="help-panel">

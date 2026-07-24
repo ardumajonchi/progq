@@ -147,6 +147,40 @@ class ProgramCard:
         return cls(title=title, instructions=instructions, labels=labels, capacity=capacity)
 
 
+# One-line reminders of the register setup a card's own logic assumes but can't perform itself
+# (the real P101's cards only ever hold the loop body -- the operator keys the starting values in
+# by hand first, exactly as the walkthroughs in docs/cards/*.txt describe in full). Keyed by title
+# so the web UI can show the right hint the moment a card is loaded, before a start key is pressed.
+SETUP_HINTS: dict[str, str] = {
+    "Countdown demo": (
+        "Type 1, + (A=1); select M, press Â (M=1); type your starting number, + (A=start); "
+        "then press V."
+    ),
+    "Fibonacci sequence": (
+        "Select B, press ✳ (B=0); type 9, + (A=9); select F, press Â (F=9, A=0); "
+        "type 1, + (A=1); then press V."
+    ),
+    "Compound interest": (
+        "Type years−1, + ; select F, press Â (F=years−1); type the rate e.g. 1.05, + ; "
+        "select M, press Â (M=rate); type the principal, + ; then press V."
+    ),
+    "Pythagorean theorem": (
+        "Type side b, + ; select B, press Â (B=b); type side a, + ; then press V."
+    ),
+    "Moon landing descent velocity": (
+        "Type 2, + ; select B, press Â (B=2); type 1.62, + ; select M, press Â (M=1.62); "
+        "type the drop height h, + ; then press V."
+    ),
+}
+
+
+def setup_hint(title: str | None) -> str | None:
+    """The register-setup reminder for a bundled example card, or None for a user-recorded card
+    (which has no such gap since it always includes its own setup key presses, or for an unknown/
+    not-yet-loaded title)."""
+    return SETUP_HINTS.get(title) if title else None
+
+
 def demo_countdown_card() -> ProgramCard:
     """The bundled demo, matching EMU101's own: "Press V, 10, S" -- a simple countdown-by-one
     loop from an operator-entered starting value down to zero, printing each step."""
