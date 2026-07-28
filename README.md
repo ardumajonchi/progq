@@ -177,6 +177,34 @@ Two AI features run on the on-device `arduino:llm` Brick, and both disable thems
   error readout explains why the machine is currently blocked and what to try next, and the "?"
   next to each saved card in the CARDS list explains what that program computes and how.
 
+## Physical control mode
+
+The emulator can also be watched and driven entirely without a browser, using the onboard LED
+matrix plus an optional Modulino Joystick, Modulino Buttons, and a second Modulino LED Matrix
+connected over Qwiic. All three are optional and degrade-safe exactly like the buzzer: if none are
+attached, nothing changes about the browser experience.
+
+- **Onboard LED matrix** scrolls the most recent tape line as text. The existing Elea 9000 logo
+  animation still takes priority: every calculation (single key press or full program run) plays
+  its quick "rebuild" flash first, and the tape scroll resumes once that flash finishes.
+- **Second Qwiic LED Matrix** (optional), if attached, continuously scrolls a physical-control
+  status line — the current menu category, the selected item, and the latched register if any
+  (e.g. `OP > + (REG:B)`, `CARD > Fibonacci`, `DIGIT > 7`).
+- **Modulino Joystick + Modulino Buttons** (optional), if attached, drive the machine through a
+  six-category menu, cycled with the joystick:
+  - Left/right moves between categories: **DIGIT**, **OP** (operator, with the register latched
+    in REG), **REG** (latch/unlatch a register for the next operator, or split/unsplit it), **START**
+    (V/W/Y/Z), **CARD** (load a saved card), **SYS** (acknowledge error, clear tape, toggle record).
+  - Up/down moves the selected item within the current category.
+  - Joystick push or **button 0** confirms/executes the selected item.
+  - **Button 1** cancels back to the DIGIT category without side effects.
+  - **Button 2** is only meaningful in the REG category, where it splits/unsplits the currently
+    selected register instead of latching it.
+
+Physical control runs in parallel with the browser and the AI Operator, not instead of them —
+every physical button press is dispatched through the exact same validated key-press path as a
+browser click, so the browser's state view always reflects what the physical controls just did.
+
 ## The bundled "Countdown demo" card
 
 Every fresh install seeds one demo card, `Countdown demo`, matching the classic demo EMU101
@@ -228,15 +256,18 @@ Browser (Socket.IO) <-- state broadcasts --  arduino:web_ui Brick
         |  "key" events                              |
         v                                             v
    python/main.py  ---------------------------  python/engine/ (Machine, RegisterFile, cards)
-        |     |                                        ^
-        |     v                                        |
+        |     |     ^                                  ^
+        |     v     |                                  |
         |  python/cardstore.py -- arduino:dbstorage_sqlstore Brick (cards.db)
+        |     |
+        |     v  btn_event / joy_event (Bridge.notify)
+        |  python/physical_control.py (menu state machine, optional Joystick + Buttons)
         |
         |  python/agents/{operator,assistant}.py -- arduino:llm Brick
         |        (tool calls dispatch back through main.py's own key handlers)
         |
-        v  Bridge RPC (play_tone / set_matrix_mode)
-   sketch/sketch.ino -- Modulino Buzzer + onboard LED matrix (MCU side)
+        v  Bridge RPC (play_tone / set_matrix_mode / set_tape_text / set_menu_text)
+   sketch/sketch.ino -- Modulino Buzzer + onboard LED matrix + optional Joystick/Buttons/Qwiic matrix
 ```
 
 - **Emulation core** (`python/engine/`). A clean-room reimplementation of the Programma 101's
@@ -275,11 +306,24 @@ Browser (Socket.IO) <-- state broadcasts --  arduino:web_ui Brick
 - **LED matrix** (`sketch/` + `python/hw.py`). The same sketch also drives the UNO Q's onboard LED
   matrix via a single `set_matrix_mode(mode)` Bridge RPC, mirroring conquest-q's approach: the MCU
   renders the current mode as a pure function of `millis()`, so the animation never blocks on or
-  waits for the Linux side. At rest the matrix holds a static 8x13 rendering of the Elea 9000 logo;
-  every calculation — a single key press via `hw.pulse_calculating()`, or a full program run
-  bracketed by `hw.show_calculating()`/`hw.show_idle()` — retriggers a ~350ms "rebuild" reveal that
-  redraws the logo pixel-by-pixel from blank to complete, and a program still running once the
-  rebuild finishes holds a slow checkerboard "breathing" pulse until it's done.
+  waits for the Linux side. At rest the matrix scrolls the most recent tape line as text (pushed
+  via `set_tape_text`); every calculation — a single key press via `hw.pulse_calculating()`, or a
+  full program run bracketed by `hw.show_calculating()`/`hw.show_idle()` — retriggers a ~350ms
+  "rebuild" reveal of the Elea 9000 logo that always takes priority over the tape scroll, redrawing
+  the logo pixel-by-pixel from blank to complete, and a program still running once the rebuild
+  finishes holds a slow checkerboard "breathing" pulse until it's done; the tape scroll resumes once
+  the flash ends.
+- **Physical control surface** (`sketch/` + `python/physical_control.py`). Optional Modulino
+  Joystick + Modulino Buttons let someone drive the whole machine without a browser, reported to
+  the Linux side as `btn_event`/`joy_event` Bridge notifications the MCU only sends on an actual
+  input edge (never every poll tick). `PhysicalControl` is a self-contained menu/cursor state
+  machine that knows nothing about `Machine`/`Tape` directly — it only ever produces the same
+  `_apply_key`-shaped dicts a browser click or the AI Operator would, so a physical button press
+  runs through the identical validated path, guarded by the same `_state_lock`, and is reflected in
+  the same state broadcast a human watching the browser sees live. An optional second Modulino LED
+  Matrix over Qwiic, if attached, continuously scrolls `PhysicalControl.status_text()` (pushed via
+  `set_menu_text`) as a standalone status readout, independent of the onboard matrix's tape/Elea
+  display.
 - **AI agents** (`python/agents/`). `operator.py` and `assistant.py` both run on the on-device
   `arduino:llm` Brick. The AI Operator's tool-calling functions dispatch through the exact same
   validated key-press handlers `main.py` exposes to a human's browser clicks, so the LLM is never

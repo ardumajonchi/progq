@@ -45,7 +45,7 @@ import threading
 from fastapi.responses import Response
 
 from arduino.app_bricks.web_ui import WebUI
-from arduino.app_utils import App
+from arduino.app_utils import App, Bridge
 
 from agents.assistant import Assistant
 from agents.operator import OperatorAgent
@@ -64,6 +64,7 @@ from engine.cpu import CpuError, Machine
 from engine.instructions import Instruction, START_KEYS
 from engine.printer import Tape
 from hw import Hardware
+from physical_control import PhysicalControl
 
 _DB_NAME = "cards.db"
 
@@ -278,6 +279,7 @@ def main():
                 "last_tape_line": tape.lines[-1] if tape.lines else None,
             }
         broadcast_state()
+        _push_display_state()
         return observation
 
     try:
@@ -285,6 +287,76 @@ def main():
     except Exception as exc:
         print(f"[progq] AI Operator init failed, running without it: {exc!r}")
         operator_agent = None
+
+    # Physical control surface (Modulino Joystick + Buttons, optional second Qwiic matrix): runs
+    # in parallel with the browser, dispatching through the exact same _apply_key path as a human's
+    # click or the AI Operator's tool calls -- see physical_control.PhysicalControl.
+    def _physical_key_press(action: dict) -> None:
+        with _state_lock:
+            _apply_key(action)
+        broadcast_state()
+
+    try:
+        physical_control = PhysicalControl(apply_key=_physical_key_press, card_titles=card_store.list_titles)
+    except Exception as exc:
+        print(f"[progq] Physical control init failed, running without it: {exc!r}")
+        physical_control = None
+
+    # Pushes the tape's latest printed line and the physical-control status line to the onboard
+    # and (optional) Qwiic matrices, but only when the text actually changed since the last push --
+    # otherwise an unrelated broadcast (e.g. a record-mode toggle) would restart the MCU's scroll
+    # animation from scratch every time.
+    _last_pushed = {"tape": None, "menu": None}
+
+    def _push_display_state() -> None:
+        if hw is None:
+            return
+        with _state_lock:
+            tape_text = tape.lines[-1] if tape.lines else ""
+        if tape_text != _last_pushed["tape"]:
+            _last_pushed["tape"] = tape_text
+            hw.set_tape_text(tape_text)
+        if physical_control is not None:
+            menu_text = physical_control.status_text()
+            if menu_text != _last_pushed["menu"]:
+                _last_pushed["menu"] = menu_text
+                hw.set_menu_text(menu_text)
+
+    # Edge-detects raw button levels reported on every btn_event (which reports the current level
+    # of all three buttons on any change, not just the one that changed) so a button already held
+    # down doesn't re-fire _confirm()/etc. every time a sibling button's state changes.
+    _last_btn_pressed = [False, False, False]
+
+    def _on_btn_event(b0: int, b1: int, b2: int) -> None:
+        if physical_control is None:
+            return
+        levels = [bool(b0), bool(b1), bool(b2)]
+        for index, pressed in enumerate(levels):
+            if pressed and not _last_btn_pressed[index]:
+                physical_control.on_button(index, True)
+        _last_btn_pressed[:] = levels
+        _push_display_state()
+
+    # Edge-detects the joystick's push button the same way (x/y direction latching is already
+    # handled inside PhysicalControl.on_joystick itself) -- joy_event can also fire on x/y jitter
+    # alone while push stays held, which would otherwise re-confirm on every such event.
+    _last_joy_pushed = [False]
+
+    def _on_joy_event(nx: int, ny: int, push: int) -> None:
+        if physical_control is None:
+            return
+        pressed = bool(push)
+        confirm_edge = pressed and not _last_joy_pushed[0]
+        _last_joy_pushed[0] = pressed
+        physical_control.on_joystick(nx, ny, confirm_edge)
+        _push_display_state()
+
+    if hw is not None:
+        try:
+            Bridge.provide("btn_event", _on_btn_event)
+            Bridge.provide("joy_event", _on_joy_event)
+        except Exception as exc:
+            print(f"[progq] Physical control Bridge wiring failed: {exc!r}")
 
     def _handle_ai_operator(request: str) -> None:
         request = request.strip()
@@ -358,9 +430,11 @@ def main():
             _apply_key(data)
 
         broadcast_state()
+        _push_display_state()
 
     def _on_connect(sid):
         broadcast_state()
+        _push_display_state()
 
     ui.on_connect(_on_connect)
     ui.on_message("key", _on_key)
