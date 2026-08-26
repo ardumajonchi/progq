@@ -19,6 +19,23 @@
   --readout: #1c231f;
   --readout-text: #7de08a;
   --error: #c0392b;
+
+  /* Key/grid sizing -- centralized here so the touch breakpoint below can scale every key at once
+     instead of duplicating the whole panel layout for the touch display. */
+  --key-h: 44px;
+  --num-size: 56px;
+  --op-size: 48px;
+  --reg-size: 56px;
+  --reg-size-small: 40px;
+  --split-size: 60px;
+  --start-w: 56px;
+  --start-h: 40px;
+  --font-key: 16px;
+  --font-num: 18px;
+  --font-op: 16px;
+  --key-gap: 6px;
+  --controls-gap: 16px;
+  --tape-h: 120px;
 }
 
 * {
@@ -58,7 +75,7 @@ html, body {
   background: #0e0e0c;
   border-radius: 4px;
   padding: 6px;
-  height: 120px;
+  height: var(--tape-h);
 }
 
 #tape {
@@ -142,7 +159,7 @@ html, body {
 
 #controls-row {
   display: flex;
-  gap: 16px;
+  gap: var(--controls-gap);
   align-items: flex-start;
 }
 
@@ -170,22 +187,22 @@ html, body {
 #reg-keys {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--key-gap);
 }
 
 .reg-key {
-  width: 56px;
-  height: 44px;
-  font-size: 16px;
+  width: var(--reg-size);
+  height: var(--key-h);
+  font-size: var(--font-key);
 }
 
 .reg-row-bottom {
   display: flex;
-  gap: 6px;
+  gap: var(--key-gap);
 }
 
 .reg-row-bottom .reg-key {
-  width: 40px;
+  width: var(--reg-size-small);
 }
 
 .reg-key.active {
@@ -194,8 +211,8 @@ html, body {
 }
 
 #split-btn {
-  width: 60px;
-  height: 44px;
+  width: var(--split-size);
+  height: var(--key-h);
   font-size: 10px;
   background: #6a5a3a;
 }
@@ -206,16 +223,16 @@ html, body {
 
 #keypad {
   display: grid;
-  grid-template-columns: repeat(3, 56px);
-  grid-template-rows: repeat(4, 44px);
-  gap: 6px;
+  grid-template-columns: repeat(3, var(--num-size));
+  grid-template-rows: repeat(4, var(--key-h));
+  gap: var(--key-gap);
 }
 
 .numkey {
   border-radius: 50%;
   background: var(--key-white);
   color: var(--ink);
-  font-size: 18px;
+  font-size: var(--font-num);
   box-shadow: 0 3px 0 #b8b2a0;
 }
 
@@ -227,8 +244,8 @@ html, body {
   grid-column: span 3;
   background: var(--key-accent);
   box-shadow: 0 3px 0 #7a2c1e;
-  font-size: 18px;
-  height: 44px;
+  font-size: var(--font-num);
+  height: var(--key-h);
 }
 
 #s-key:hover {
@@ -237,15 +254,15 @@ html, body {
 
 #ops-grid {
   display: grid;
-  grid-template-columns: repeat(3, 48px);
-  grid-template-rows: repeat(3, 44px);
-  gap: 6px;
+  grid-template-columns: repeat(3, var(--op-size));
+  grid-template-rows: repeat(3, var(--key-h));
+  gap: var(--key-gap);
 }
 
 .opkey {
-  width: 48px;
-  height: 44px;
-  font-size: 16px;
+  width: var(--op-size);
+  height: var(--key-h);
+  font-size: var(--font-op);
 }
 
 /* -- mode bar / start keys ---------------------------------------------------------------- */
@@ -292,9 +309,9 @@ html, body {
 }
 
 .start-key {
-  width: 56px;
-  height: 40px;
-  font-size: 16px;
+  width: var(--start-w);
+  height: var(--start-h);
+  font-size: var(--font-op);
   background: #3a5a3a;
   box-shadow: 0 3px 0 #1e321e;
 }
@@ -530,4 +547,84 @@ html, body {
 
 #help-steps b {
   color: var(--ink);
+}
+
+/* -- responsive / touch breakpoint --------------------------------------------------------------
+   Below 820px (the 720px-wide Waveshare 5" DSI-TOUCH-A kiosk, and any similarly narrow desktop
+   window) there isn't room for the calculator and the side panel side by side, so they stack
+   instead, and every key/grid dimension grows via the custom properties above -- scaled up just
+   enough to stay finger-sized without any single row overflowing 720px (checked against the
+   panel's worst-case row, #controls-row, which comes to ~634px of keys plus padding at these
+   sizes). Desktop layout above the breakpoint is completely unaffected. */
+@media (max-width: 820px) {
+  :root {
+    --key-h: 56px;
+    --num-size: 70px;
+    --op-size: 60px;
+    --reg-size: 70px;
+    --reg-size-small: 50px;
+    --split-size: 74px;
+    --start-w: 70px;
+    --start-h: 50px;
+    --font-key: 20px;
+    --font-num: 22px;
+    --font-op: 19px;
+    --key-gap: 7px;
+    --controls-gap: 14px;
+    --tape-h: 220px;
+  }
+
+  #app {
+    flex-direction: column;
+  }
+
+  #side-panel {
+    width: 100%;
+  }
+
+  #controls-row {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  #start-keys {
+    justify-content: center;
+  }
+
+  .readout-box span:not(.readout-label) {
+    font-size: 22px;
+  }
+
+  .readout-label {
+    font-size: 12px;
+  }
+
+  .ai-explain-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+
+  #commit-title, #ai-operator-input {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  #commit-btn, #ai-operator-btn, #upload-label {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .card-title, #card-list {
+    font-size: 13px;
+  }
+
+  .card-del, .card-dl, .card-explain {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+
+  #help-steps {
+    font-size: 13px;
+  }
 }
