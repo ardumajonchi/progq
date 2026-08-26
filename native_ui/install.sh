@@ -8,9 +8,10 @@
 # automatically every time an XFCE session starts. Run this once after pushing native_ui/ to the
 # board (e.g. via `adb shell native_ui/install.sh` from the app's directory).
 #
-# This script deliberately does NOT touch lightdm autologin -- that requires sudo, and sudo needs
-# an interactive password this script can't supply non-interactively. See the README's "Native
-# touch-display UI" section for that one manual step.
+# This script deliberately does NOT touch anything that needs root -- activating the Media
+# Carrier's display output, installing unclutter, and lightdm autologin all need an interactive
+# sudo password this script can't supply non-interactively. Run native_ui/setup-sudo.sh once
+# yourself for those; see the README's "Native touch-display UI" section.
 set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -22,5 +23,6 @@ mkdir -p "$AUTOSTART_DIR"
 cp "$SCRIPT_DIR/progq-kiosk.desktop" "$AUTOSTART_DIR/progq-kiosk.desktop"
 
 echo "Installed. The kiosk will open automatically on the next XFCE login."
-echo "For it to come up with no keyboard at all, also enable lightdm autologin manually --"
-echo "see the README's Native touch-display UI section."
+echo "If you haven't yet, also run 'sudo sh native_ui/setup-sudo.sh' once to activate the Media"
+echo "Carrier's display and enable a keyboard-less autologin -- see the README's Native"
+echo "touch-display UI section."

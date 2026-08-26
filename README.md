@@ -218,27 +218,62 @@ implementation to keep in sync: the touchscreen always looks and behaves exactly
 and both can be used at the same time, updating each other live, the same way the browser, AI
 Operator, and physical controls already share one state via `_apply_key`/`broadcast_state()`.
 
-**Setup** (the Media Carrier's Linux side already ships XFCE, lightdm, Xorg, and Chromium, and
-already recognizes the Waveshare panel's Goodix touch controller -- no driver/overlay work is
-needed):
+### Installing and activating the Media Carrier
 
-1. Push this repo's `native_ui/` folder to the board and run its installer once:
+The Media Carrier is the UNO Q's expansion carrier board: it stacks onto the UNO Q's expansion
+connector and breaks out the MPU's DSI (and CSI camera) lanes that the bare UNO Q doesn't expose
+on its own. Physically:
+
+1. Stack the Media Carrier onto the UNO Q's expansion connector and secure it (see Arduino's Media
+   Carrier documentation for the exact mechanical steps for your revision).
+2. Connect the Waveshare DSI-TOUCH-A panel's DSI cable to the Media Carrier's DSI connector.
+3. Power on the UNO Q as usual.
+
+The carrier being physically attached isn't enough on its own -- the board's Linux image ships
+with a device-tree overlay per attached-panel size, and one must be *activated* (a config +
+reboot step, not a driver install) before the kernel will actually drive that panel. The board's
+`arduino-linux-config` tool does this:
+
+```
+arduino-linux-config carrier list                                    # see what your carrier supports
+sudo arduino-linux-config carrier enable media-carrier display=5-dsi-touch-a
+```
+
+Use `8-dsi-touch-a` or `10-dsi-touch-a` instead if you're using one of the larger Waveshare
+DSI-TOUCH-A panels. `arduino-linux-config carrier show` reports the current and next-boot state;
+`sudo arduino-linux-config carrier disable media-carrier` reverts to the base DTB (no carrier
+display) if you ever want to go back to browser-only use. This one command is bundled into
+`native_ui/setup-sudo.sh` below, so you don't need to run it by hand.
+
+**Setup** (the Media Carrier's Linux side already ships XFCE, lightdm, Xorg, and Chromium, and
+already recognizes the Waveshare panel's Goodix touch controller once the overlay above is
+active -- no separate driver install is needed):
+
+1. Push this repo's `native_ui/` folder to the board:
    ```
    adb push native_ui /home/arduino/ArduinoApps/progq/native_ui
-   adb shell "/home/arduino/ArduinoApps/progq/native_ui/install.sh"
+   ```
+2. **One manual step, run once (requires an interactive root/`sudo` password, so it can't be
+   scripted over a one-line `adb shell "..."` call -- run it at the board's console, over SSH, or
+   in an interactive `adb shell` session):** this single script does everything on this board that
+   needs root, so it's the only manual step in the whole setup --
+   activating the Media Carrier's display overlay (above), installing `unclutter` (hides the mouse
+   cursor in kiosk mode; the app degrades to a visible cursor if this is skipped), and enabling
+   lightdm autologin for the `arduino` user so the kiosk comes up with no keyboard attached at all:
+   ```
+   sudo sh /home/arduino/ArduinoApps/progq/native_ui/setup-sudo.sh
+   ```
+   Pass a different display option as an argument (e.g. `sudo sh setup-sudo.sh 10-dsi-touch-a`) if
+   you're using a larger panel.
+3. Run the (unprivileged) autostart installer:
+   ```
+   adb shell "sh /home/arduino/ArduinoApps/progq/native_ui/install.sh"
    ```
    This registers `native_ui/launch-progq-kiosk.sh` as an XFCE autostart entry for the `arduino`
-   user, so it opens automatically on the next XFCE login.
-2. **Manual step (requires an interactive `sudo` password, so it can't be scripted over `adb
-   shell`):** to have the kiosk come up with no keyboard at all -- the point of a touch-only
-   appliance UI -- enable lightdm autologin for the `arduino` user. On the board (console or SSH):
-   ```
-   sudo mkdir -p /etc/lightdm/lightdm.conf.d
-   printf '[Seat:*]\nautologin-user=arduino\nautologin-user-timeout=0\n' | \
-     sudo tee /etc/lightdm/lightdm.conf.d/50-progq-kiosk-autologin.conf
-   sudo systemctl restart lightdm
-   ```
-   Without this step the touchscreen sits at the lightdm login screen until someone logs in.
+   user, so it opens automatically on every XFCE login.
+4. Reboot the board. The Media Carrier display overlay only takes effect on the next boot; after
+   it, the board should come up straight into the touch kiosk with no login screen and no keyboard
+   needed.
 
 If the panel is mounted rotated, or touch input feels mismatched with the display orientation,
 see the Waveshare 5" DSI-TOUCH-A wiki's rotation/touch-calibration instructions (screen rotation
