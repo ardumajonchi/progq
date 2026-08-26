@@ -205,6 +205,45 @@ Physical control runs in parallel with the browser and the AI Operator, not inst
 every physical button press is dispatched through the exact same validated key-press path as a
 browser click, so the browser's state view always reflects what the physical controls just did.
 
+## Native touch-display UI
+
+The emulator can also be shown full-screen on an attached touchscreen -- e.g. a Waveshare 5"
+DSI-TOUCH-A connected to the Media Carrier's DSI port -- with no browser window, keyboard, or
+mouse involved. This is optional and degrade-safe like everything else in this app: with no
+display attached, nothing about the browser experience changes.
+
+It works by pointing a chrome-free Chromium kiosk window at `http://127.0.0.1:7000/` -- the exact
+same page and Socket.IO server the browser UI already talks to. There's no separate
+implementation to keep in sync: the touchscreen always looks and behaves exactly like the browser,
+and both can be used at the same time, updating each other live, the same way the browser, AI
+Operator, and physical controls already share one state via `_apply_key`/`broadcast_state()`.
+
+**Setup** (the Media Carrier's Linux side already ships XFCE, lightdm, Xorg, and Chromium, and
+already recognizes the Waveshare panel's Goodix touch controller -- no driver/overlay work is
+needed):
+
+1. Push this repo's `native_ui/` folder to the board and run its installer once:
+   ```
+   adb push native_ui /home/arduino/ArduinoApps/progq/native_ui
+   adb shell "/home/arduino/ArduinoApps/progq/native_ui/install.sh"
+   ```
+   This registers `native_ui/launch-progq-kiosk.sh` as an XFCE autostart entry for the `arduino`
+   user, so it opens automatically on the next XFCE login.
+2. **Manual step (requires an interactive `sudo` password, so it can't be scripted over `adb
+   shell`):** to have the kiosk come up with no keyboard at all -- the point of a touch-only
+   appliance UI -- enable lightdm autologin for the `arduino` user. On the board (console or SSH):
+   ```
+   sudo mkdir -p /etc/lightdm/lightdm.conf.d
+   printf '[Seat:*]\nautologin-user=arduino\nautologin-user-timeout=0\n' | \
+     sudo tee /etc/lightdm/lightdm.conf.d/50-progq-kiosk-autologin.conf
+   sudo systemctl restart lightdm
+   ```
+   Without this step the touchscreen sits at the lightdm login screen until someone logs in.
+
+If the panel is mounted rotated, or touch input feels mismatched with the display orientation,
+see the Waveshare 5" DSI-TOUCH-A wiki's rotation/touch-calibration instructions (screen rotation
+plus a matching `LIBINPUT_CALIBRATION_MATRIX` udev rule).
+
 ## The bundled "Countdown demo" card
 
 Every fresh install seeds one demo card, `Countdown demo`, matching the classic demo EMU101
