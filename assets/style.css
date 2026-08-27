@@ -568,16 +568,16 @@ html, body {
 @media (max-width: 820px) {
   :root {
     --key-h: 56px;
-    --num-size: 78px;
+    --num-size: 83px;
     --op-size: 60px;
     --reg-size: 70px;
     --reg-size-small: 50px;
     --split-size: 74px;
     --font-key: 20px;
-    --font-num: 23px;
+    --font-num: 25px;
     --font-op: 19px;
     --key-gap: 8px;
-    --controls-gap: 15px;
+    --controls-gap: 12px;
     --tape-h: 220px;
   }
 
