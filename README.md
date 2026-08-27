@@ -222,7 +222,9 @@ display attached, nothing about the browser experience changes.
 ![Programma Q running full-screen in the touch kiosk, in portrait mode on a Waveshare 5" DSI-TOUCH-A panel](docs/screenshot-kiosk.png)
 
 *The same UI as above, chrome-free and re-flowed for the touch panel's 720x1280 portrait screen via
-the responsive breakpoint in `assets/style.css` -- larger touch targets, stacked panel layout.*
+the responsive breakpoint in `assets/style.css` -- bigger, more widely spaced keys, the V/W/Y/Z
+start keys tucked in next to the operator keys, and roomier program-recording/card controls, all
+sized for touch.*
 
 It works by pointing a chrome-free Chromium kiosk window at `http://127.0.0.1:7000/` -- the exact
 same page and Socket.IO server the browser UI already talks to. There's no separate
@@ -230,11 +232,18 @@ implementation to keep in sync: the touchscreen always looks and behaves exactly
 and both can be used at the same time, updating each other live, the same way the browser, AI
 Operator, and physical controls already share one state via `_apply_key`/`broadcast_state()`.
 
-![Programma Q running full-screen in kiosk mode on a portrait touch panel](docs/screenshot-kiosk.png)
+If the app stops or restarts while the kiosk window is open, the page doesn't sit there frozen on
+a stale, unresponsive frame -- it shows a "CONNECTING TO PROGRAMMA Q..." overlay until the
+Socket.IO client reconnects and a fresh `state` broadcast arrives, at which point the overlay
+disappears on its own. This applies to the browser UI too, since it's the same page.
 
-*The same web UI, unchanged, filling a 720x1280 Waveshare 5" DSI-TOUCH-A in portrait -- the
-responsive breakpoint below stacks the calculator above the side panel once the layout is too
-narrow for the desktop's side-by-side view.*
+`launch-progq-kiosk.sh` also watches its own Chromium process: a renderer crash can silently drop
+Chromium onto its New Tab Page with no visible error (kiosk mode suppresses the crash bubble),
+leaving the window open but pointed nowhere useful, while the top-level process itself stays alive
+throughout -- so a plain "is the process still running" check can't catch it. Instead the script
+polls Chromium's own `--remote-debugging-port` endpoint every 10 seconds for the URL actually on
+screen, and kills and relaunches Chromium if it's gone dark or drifted away from the app for two
+consecutive checks (or died outright).
 
 ### Installing and activating the Media Carrier
 

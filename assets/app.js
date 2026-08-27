@@ -264,6 +264,10 @@ function setupUpload() {
   });
 }
 
+function setOffline(offline) {
+  document.getElementById("offline-overlay").hidden = !offline;
+}
+
 function main() {
   setupKeypad();
   setupOps();
@@ -277,7 +281,12 @@ function main() {
   setupAiOperator();
 
   socket = io();
-  socket.on("state", onState);
+  socket.on("disconnect", () => setOffline(true));
+  socket.on("connect_error", () => setOffline(true));
+  socket.on("state", (payload) => {
+    setOffline(false);
+    onState(payload);
+  });
   socket.on("ai_reply", onAiReply);
 }
 
