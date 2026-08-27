@@ -237,6 +237,14 @@ a stale, unresponsive frame -- it shows a "CONNECTING TO PROGRAMMA Q..." overlay
 Socket.IO client reconnects and a fresh `state` broadcast arrives, at which point the overlay
 disappears on its own. This applies to the browser UI too, since it's the same page.
 
+`launch-progq-kiosk.sh` also watches its own Chromium process: a renderer crash can silently drop
+Chromium onto its New Tab Page with no visible error (kiosk mode suppresses the crash bubble),
+leaving the window open but pointed nowhere useful, while the top-level process itself stays alive
+throughout -- so a plain "is the process still running" check can't catch it. Instead the script
+polls Chromium's own `--remote-debugging-port` endpoint every 10 seconds for the URL actually on
+screen, and kills and relaunches Chromium if it's gone dark or drifted away from the app for two
+consecutive checks (or died outright).
+
 ### Installing and activating the Media Carrier
 
 The Media Carrier is the UNO Q's expansion carrier board: it stacks onto the UNO Q's expansion
