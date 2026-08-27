@@ -5,7 +5,11 @@ calculator/proto-PC. Built on the official `WebUI`, `Database - SQL`, and
 Local `LLM` Bricks, with keyboard-click sound effects on a physical Modulino Buzzer (optional) and the
 animation on the UNO Q's onboard LED matrix.
 
-![Programma Q UI](docs/screenshot.png)
+![Programma Q UI in a desktop browser](docs/screenshot.png)
+
+*The full desktop layout: the emulator panel on the left, with the CARDS list, AI OPERATOR panel
+(ready to take a natural-language request and drive the keyboard itself), and how-to-use steps in
+the side column.*
 
 ## History
 
@@ -58,7 +62,15 @@ on a 2020s Arduino board, closes that loop in the same town's design lineage it 
 
 Deploy with the Arduino App CLI like any other app Brick bundle (`app.yaml` declares the
 `arduino:web_ui`, `arduino:dbstorage_sqlstore`, and `arduino:llm` Bricks, and exposes port 7000).
-Once deployed, open the app's URL (`http://<device-ip>:7000/`) in a browser to use it. Attach a
+Once deployed, open the app's URL (`http://<device-ip>:7000/`) in a browser to use it.
+
+**After a board reboot**, App Lab/`arduino-app-cli` does not auto-start any app -- it comes back up
+stopped, and the URL above won't respond until something starts it. Open the app from App Lab once
+(or run `arduino-app-cli app start user:progq`) to bring it back. If you've set up the touch kiosk
+below, you don't need to do this yourself: the kiosk launcher starts the app itself on every boot,
+so the touch panel comes up working with no App Lab interaction at all.
+
+Attach a
 Modulino Buzzer to the paired MCU for keyboard-click, error, and printer-chatter sounds -- the app
 runs fine without one, silently skipping the tones. The onboard LED matrix holds a static Elea logo
 while idle and rapidly "rebuilds" it from blank to complete every time a calculation runs (a single
@@ -172,6 +184,119 @@ Two AI features run on the on-device `arduino:llm` Brick, and both disable thems
   error readout explains why the machine is currently blocked and what to try next, and the "?"
   next to each saved card in the CARDS list explains what that program computes and how.
 
+## Physical control mode
+
+The emulator can also be watched and driven entirely without a browser, using the onboard LED
+matrix plus an optional Modulino Joystick, Modulino Buttons, and a second Modulino LED Matrix
+connected over Qwiic. All three are optional and degrade-safe exactly like the buzzer: if none are
+attached, nothing changes about the browser experience.
+
+- **Onboard LED matrix** scrolls the most recent tape line as text. The existing Elea 9000 logo
+  animation still takes priority: every calculation (single key press or full program run) plays
+  its quick "rebuild" flash first, and the tape scroll resumes once that flash finishes.
+- **Second Qwiic LED Matrix** (optional), if attached, continuously scrolls a physical-control
+  status line — the current menu category, the selected item, and the latched register if any
+  (e.g. `OP > + (REG:B)`, `CARD > Fibonacci`, `DIGIT > 7`).
+- **Modulino Joystick + Modulino Buttons** (optional), if attached, drive the machine through a
+  six-category menu, cycled with the joystick:
+  - Left/right moves between categories: **DIGIT**, **OP** (operator, with the register latched
+    in REG), **REG** (latch/unlatch a register for the next operator, or split/unsplit it), **START**
+    (V/W/Y/Z), **CARD** (load a saved card), **SYS** (acknowledge error, clear tape, toggle record).
+  - Up/down moves the selected item within the current category.
+  - Joystick push or **button 0** confirms/executes the selected item.
+  - **Button 1** cancels back to the DIGIT category without side effects.
+  - **Button 2** is only meaningful in the REG category, where it splits/unsplits the currently
+    selected register instead of latching it.
+
+Physical control runs in parallel with the browser and the AI Operator, not instead of them —
+every physical button press is dispatched through the exact same validated key-press path as a
+browser click, so the browser's state view always reflects what the physical controls just did.
+
+## Native touch-display UI
+
+The emulator can also be shown full-screen on an attached touchscreen -- e.g. a Waveshare 5"
+DSI-TOUCH-A connected to the Media Carrier's DSI port -- with no browser window, keyboard, or
+mouse involved. This is optional and degrade-safe like everything else in this app: with no
+display attached, nothing about the browser experience changes.
+
+![Programma Q running full-screen in the touch kiosk, in portrait mode on a Waveshare 5" DSI-TOUCH-A panel](docs/screenshot-kiosk.png)
+
+*The same UI as above, chrome-free and re-flowed for the touch panel's 720x1280 portrait screen via
+the responsive breakpoint in `assets/style.css` -- larger touch targets, stacked panel layout.*
+
+It works by pointing a chrome-free Chromium kiosk window at `http://127.0.0.1:7000/` -- the exact
+same page and Socket.IO server the browser UI already talks to. There's no separate
+implementation to keep in sync: the touchscreen always looks and behaves exactly like the browser,
+and both can be used at the same time, updating each other live, the same way the browser, AI
+Operator, and physical controls already share one state via `_apply_key`/`broadcast_state()`.
+
+![Programma Q running full-screen in kiosk mode on a portrait touch panel](docs/screenshot-kiosk.png)
+
+*The same web UI, unchanged, filling a 720x1280 Waveshare 5" DSI-TOUCH-A in portrait -- the
+responsive breakpoint below stacks the calculator above the side panel once the layout is too
+narrow for the desktop's side-by-side view.*
+
+### Installing and activating the Media Carrier
+
+The Media Carrier is the UNO Q's expansion carrier board: it stacks onto the UNO Q's expansion
+connector and breaks out the MPU's DSI (and CSI camera) lanes that the bare UNO Q doesn't expose
+on its own. Physically:
+
+1. Stack the Media Carrier onto the UNO Q's expansion connector and secure it (see Arduino's Media
+   Carrier documentation for the exact mechanical steps for your revision).
+2. Connect the Waveshare DSI-TOUCH-A panel's DSI cable to the Media Carrier's DSI connector.
+3. Power on the UNO Q as usual.
+
+The carrier being physically attached isn't enough on its own -- the board's Linux image ships
+with a device-tree overlay per attached-panel size, and one must be *activated* (a config +
+reboot step, not a driver install) before the kernel will actually drive that panel. The board's
+`arduino-linux-config` tool does this:
+
+```
+arduino-linux-config carrier list                                    # see what your carrier supports
+sudo arduino-linux-config carrier enable media-carrier display=5-dsi-touch-a
+```
+
+Use `8-dsi-touch-a` or `10-dsi-touch-a` instead if you're using one of the larger Waveshare
+DSI-TOUCH-A panels. `arduino-linux-config carrier show` reports the current and next-boot state;
+`sudo arduino-linux-config carrier disable media-carrier` reverts to the base DTB (no carrier
+display) if you ever want to go back to browser-only use. This one command is bundled into
+`native_ui/setup-sudo.sh` below, so you don't need to run it by hand.
+
+**Setup** (the Media Carrier's Linux side already ships XFCE, lightdm, Xorg, and Chromium, and
+already recognizes the Waveshare panel's Goodix touch controller once the overlay above is
+active -- no separate driver install is needed):
+
+1. Push this repo's `native_ui/` folder to the board:
+   ```
+   adb push native_ui /home/arduino/ArduinoApps/progq/native_ui
+   ```
+2. **One manual step, run once (requires an interactive root/`sudo` password, so it can't be
+   scripted over a one-line `adb shell "..."` call -- run it at the board's console, over SSH, or
+   in an interactive `adb shell` session):** this single script does everything on this board that
+   needs root, so it's the only manual step in the whole setup --
+   activating the Media Carrier's display overlay (above), installing `unclutter` (hides the mouse
+   cursor in kiosk mode; the app degrades to a visible cursor if this is skipped), and enabling
+   lightdm autologin for the `arduino` user so the kiosk comes up with no keyboard attached at all:
+   ```
+   sudo sh /home/arduino/ArduinoApps/progq/native_ui/setup-sudo.sh
+   ```
+   Pass a different display option as an argument (e.g. `sudo sh setup-sudo.sh 10-dsi-touch-a`) if
+   you're using a larger panel.
+3. Run the (unprivileged) autostart installer:
+   ```
+   adb shell "sh /home/arduino/ArduinoApps/progq/native_ui/install.sh"
+   ```
+   This registers `native_ui/launch-progq-kiosk.sh` as an XFCE autostart entry for the `arduino`
+   user, so it opens automatically on every XFCE login.
+4. Reboot the board. The Media Carrier display overlay only takes effect on the next boot; after
+   it, the board should come up straight into the touch kiosk with no login screen and no keyboard
+   needed.
+
+If the panel is mounted rotated, or touch input feels mismatched with the display orientation,
+see the Waveshare 5" DSI-TOUCH-A wiki's rotation/touch-calibration instructions (screen rotation
+plus a matching `LIBINPUT_CALIBRATION_MATRIX` udev rule).
+
 ## The bundled "Countdown demo" card
 
 Every fresh install seeds one demo card, `Countdown demo`, matching the classic demo EMU101
@@ -223,15 +348,18 @@ Browser (Socket.IO) <-- state broadcasts --  arduino:web_ui Brick
         |  "key" events                              |
         v                                             v
    python/main.py  ---------------------------  python/engine/ (Machine, RegisterFile, cards)
-        |     |                                        ^
-        |     v                                        |
+        |     |     ^                                  ^
+        |     v     |                                  |
         |  python/cardstore.py -- arduino:dbstorage_sqlstore Brick (cards.db)
+        |     |
+        |     v  btn_event / joy_event (Bridge.notify)
+        |  python/physical_control.py (menu state machine, optional Joystick + Buttons)
         |
         |  python/agents/{operator,assistant}.py -- arduino:llm Brick
         |        (tool calls dispatch back through main.py's own key handlers)
         |
-        v  Bridge RPC (play_tone / set_matrix_mode)
-   sketch/sketch.ino -- Modulino Buzzer + onboard LED matrix (MCU side)
+        v  Bridge RPC (play_tone / set_matrix_mode / set_tape_text / set_menu_text)
+   sketch/sketch.ino -- Modulino Buzzer + onboard LED matrix + optional Joystick/Buttons/Qwiic matrix
 ```
 
 - **Emulation core** (`python/engine/`). A clean-room reimplementation of the Programma 101's
@@ -270,11 +398,24 @@ Browser (Socket.IO) <-- state broadcasts --  arduino:web_ui Brick
 - **LED matrix** (`sketch/` + `python/hw.py`). The same sketch also drives the UNO Q's onboard LED
   matrix via a single `set_matrix_mode(mode)` Bridge RPC, mirroring conquest-q's approach: the MCU
   renders the current mode as a pure function of `millis()`, so the animation never blocks on or
-  waits for the Linux side. At rest the matrix holds a static 8x13 rendering of the Elea 9000 logo;
-  every calculation — a single key press via `hw.pulse_calculating()`, or a full program run
-  bracketed by `hw.show_calculating()`/`hw.show_idle()` — retriggers a ~350ms "rebuild" reveal that
-  redraws the logo pixel-by-pixel from blank to complete, and a program still running once the
-  rebuild finishes holds a slow checkerboard "breathing" pulse until it's done.
+  waits for the Linux side. At rest the matrix scrolls the most recent tape line as text (pushed
+  via `set_tape_text`); every calculation — a single key press via `hw.pulse_calculating()`, or a
+  full program run bracketed by `hw.show_calculating()`/`hw.show_idle()` — retriggers a ~350ms
+  "rebuild" reveal of the Elea 9000 logo that always takes priority over the tape scroll, redrawing
+  the logo pixel-by-pixel from blank to complete, and a program still running once the rebuild
+  finishes holds a slow checkerboard "breathing" pulse until it's done; the tape scroll resumes once
+  the flash ends.
+- **Physical control surface** (`sketch/` + `python/physical_control.py`). Optional Modulino
+  Joystick + Modulino Buttons let someone drive the whole machine without a browser, reported to
+  the Linux side as `btn_event`/`joy_event` Bridge notifications the MCU only sends on an actual
+  input edge (never every poll tick). `PhysicalControl` is a self-contained menu/cursor state
+  machine that knows nothing about `Machine`/`Tape` directly — it only ever produces the same
+  `_apply_key`-shaped dicts a browser click or the AI Operator would, so a physical button press
+  runs through the identical validated path, guarded by the same `_state_lock`, and is reflected in
+  the same state broadcast a human watching the browser sees live. An optional second Modulino LED
+  Matrix over Qwiic, if attached, continuously scrolls `PhysicalControl.status_text()` (pushed via
+  `set_menu_text`) as a standalone status readout, independent of the onboard matrix's tape/Elea
+  display.
 - **AI agents** (`python/agents/`). `operator.py` and `assistant.py` both run on the on-device
   `arduino:llm` Brick. The AI Operator's tool-calling functions dispatch through the exact same
   validated key-press handlers `main.py` exposes to a human's browser clicks, so the LLM is never

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Programma Q Kiosk
+Comment=Native touch-display UI for Programma Q -- opens the same web UI full-screen
+Exec=/home/arduino/ArduinoApps/progq/native_ui/launch-progq-kiosk.sh
+X-GNOME-Autostart-enabled=true
+NoDisplay=false

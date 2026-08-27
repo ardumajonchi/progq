@@ -73,3 +73,18 @@ class Hardware:
         self._set_matrix_mode(MATRIX_MODE_CALCULATING)
         self._set_matrix_mode(MATRIX_MODE_IDLE)
 
+    def set_tape_text(self, text: str) -> None:
+        """Cosmetic, same rationale as _play/_set_matrix_mode: the onboard matrix's tape scroll
+        must never take the emulator down if the MCU isn't ready."""
+        try:
+            self._bridge.call("set_tape_text", text)
+        except Exception as exc:
+            print(f"[progq] set_tape_text failed, MCU not ready: {exc!r}")
+
+    def set_menu_text(self, text: str) -> None:
+        """No-op on the MCU side if no second Qwiic matrix is attached; cosmetic here too."""
+        try:
+            self._bridge.call("set_menu_text", text)
+        except Exception as exc:
+            print(f"[progq] set_menu_text failed, MCU not ready: {exc!r}")
+
