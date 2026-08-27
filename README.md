@@ -232,6 +232,11 @@ implementation to keep in sync: the touchscreen always looks and behaves exactly
 and both can be used at the same time, updating each other live, the same way the browser, AI
 Operator, and physical controls already share one state via `_apply_key`/`broadcast_state()`.
 
+If the app stops or restarts while the kiosk window is open, the page doesn't sit there frozen on
+a stale, unresponsive frame -- it shows a "CONNECTING TO PROGRAMMA Q..." overlay until the
+Socket.IO client reconnects and a fresh `state` broadcast arrives, at which point the overlay
+disappears on its own. This applies to the browser UI too, since it's the same page.
+
 ### Installing and activating the Media Carrier
 
 The Media Carrier is the UNO Q's expansion carrier board: it stacks onto the UNO Q's expansion

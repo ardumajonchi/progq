@@ -56,6 +56,34 @@ html, body {
   background: #14120f;
 }
 
+/* Shown on load until the first "state" broadcast arrives, and again on socket disconnect --
+   without it, a dropped connection (e.g. the app container stopping) leaves the last frame frozen
+   on screen with no indication that key presses are going nowhere. */
+#offline-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 18, 15, 0.94);
+  color: var(--readout-text);
+  font-family: "Courier New", Courier, monospace;
+}
+
+/* The [hidden] attribute alone loses to the ID selector's own `display: flex` above -- this
+   restores the browser's default [hidden] -> display:none behavior at matching specificity. */
+#offline-overlay[hidden] {
+  display: none;
+}
+
+#offline-message {
+  font-size: 18px;
+  letter-spacing: 1px;
+  text-align: center;
+  padding: 0 24px;
+}
+
 #panel {
   flex: 1;
   background: var(--case);
@@ -570,7 +598,9 @@ html, body {
     --key-h: 56px;
     --num-size: 83px;
     --op-size: 60px;
-    --reg-size: 70px;
+    /* Matches the M/SPLIT/B row's width (2*--reg-size-small + --split-size + 2*--key-gap) so F/E/D/C
+       stretch to fill the #reg-keys column instead of leaving a dead notch next to the keypad. */
+    --reg-size: 190px;
     --reg-size-small: 50px;
     --split-size: 74px;
     --font-key: 20px;
