@@ -5,12 +5,11 @@ calculator/proto-PC. Built on the official `arduino:web_ui`, `arduino:dbstorage_
 `arduino:llm` Bricks, with keyboard-click sound effects on a physical Modulino Buzzer and the
 Elea logo animating on the UNO Q's onboard LED matrix.
 
-![Programma Q UI](docs/screenshot.png)
+![Programma Q UI in a desktop browser](docs/screenshot.png)
 
-*A blocked `DIVISION BY ZERO` error, with the "?" button ready to ask the AI Assistant to explain
-it in plain English, and the AI OPERATOR panel in the side column ready to take a natural-language
-request and drive the keyboard itself. The register-setup hint above the start keys shows the key
-sequence a loaded example card expects before it's run.*
+*The full desktop layout: the emulator panel on the left, with the CARDS list, AI OPERATOR panel
+(ready to take a natural-language request and drive the keyboard itself), and how-to-use steps in
+the side column.*
 
 ## History
 
@@ -63,7 +62,15 @@ on a 2020s Arduino board, closes that loop in the same town's design lineage it 
 
 Deploy with the Arduino App CLI like any other app Brick bundle (`app.yaml` declares the
 `arduino:web_ui`, `arduino:dbstorage_sqlstore`, and `arduino:llm` Bricks, and exposes port 7000).
-Once deployed, open the app's URL (`http://<device-ip>:7000/`) in a browser to use it. Attach a
+Once deployed, open the app's URL (`http://<device-ip>:7000/`) in a browser to use it.
+
+**After a board reboot**, App Lab/`arduino-app-cli` does not auto-start any app -- it comes back up
+stopped, and the URL above won't respond until something starts it. Open the app from App Lab once
+(or run `arduino-app-cli app start user:progq`) to bring it back. If you've set up the touch kiosk
+below, you don't need to do this yourself: the kiosk launcher starts the app itself on every boot,
+so the touch panel comes up working with no App Lab interaction at all.
+
+Attach a
 Modulino Buzzer to the paired MCU for keyboard-click, error, and printer-chatter sounds -- the app
 runs fine without one, silently skipping the tones. The onboard LED matrix holds a static Elea logo
 while idle and rapidly "rebuilds" it from blank to complete every time a calculation runs (a single
@@ -212,11 +219,22 @@ DSI-TOUCH-A connected to the Media Carrier's DSI port -- with no browser window,
 mouse involved. This is optional and degrade-safe like everything else in this app: with no
 display attached, nothing about the browser experience changes.
 
+![Programma Q running full-screen in the touch kiosk, in portrait mode on a Waveshare 5" DSI-TOUCH-A panel](docs/screenshot-kiosk.png)
+
+*The same UI as above, chrome-free and re-flowed for the touch panel's 720x1280 portrait screen via
+the responsive breakpoint in `assets/style.css` -- larger touch targets, stacked panel layout.*
+
 It works by pointing a chrome-free Chromium kiosk window at `http://127.0.0.1:7000/` -- the exact
 same page and Socket.IO server the browser UI already talks to. There's no separate
 implementation to keep in sync: the touchscreen always looks and behaves exactly like the browser,
 and both can be used at the same time, updating each other live, the same way the browser, AI
 Operator, and physical controls already share one state via `_apply_key`/`broadcast_state()`.
+
+![Programma Q running full-screen in kiosk mode on a portrait touch panel](docs/screenshot-kiosk.png)
+
+*The same web UI, unchanged, filling a 720x1280 Waveshare 5" DSI-TOUCH-A in portrait -- the
+responsive breakpoint below stacks the calculator above the side panel once the layout is too
+narrow for the desktop's side-by-side view.*
 
 ### Installing and activating the Media Carrier
 

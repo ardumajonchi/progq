@@ -23,6 +23,12 @@ if command -v unclutter >/dev/null 2>&1; then
   unclutter -idle 0 &
 fi
 
+# arduino-app-cli does not auto-start apps on boot -- after a reboot the app container simply isn't
+# running until something starts it, which is why the kiosk would otherwise come up pointed at a
+# dead port. Best-effort start it ourselves so the kiosk is fully self-sufficient; ignore the error
+# this prints if the app (or App Lab) already started it first.
+arduino-app-cli app start user:progq >/dev/null 2>&1 || true
+
 # The app container can take a few seconds to come up after boot; wait for it instead of racing it.
 for _ in $(seq 1 60); do
   if curl --max-time 1 -s -o /dev/null "$URL"; then
